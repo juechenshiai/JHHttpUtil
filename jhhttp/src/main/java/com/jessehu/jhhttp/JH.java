@@ -1,7 +1,7 @@
 package com.jessehu.jhhttp;
 
-import com.jessehu.jhhttp.http.HttpManager;
 import com.jessehu.jhhttp.http.HttpManagerImpl;
+import com.jessehu.jhhttp.http.HttpManager;
 import com.jessehu.jhhttp.thread.ThreadPoolManager;
 import com.jessehu.jhhttp.thread.ThreadPoolManagerImpl;
 
@@ -13,28 +13,28 @@ import com.jessehu.jhhttp.thread.ThreadPoolManagerImpl;
  */
 public class JH {
 
-    private static HttpManagerImpl mHttpManager;
-    private static ThreadPoolManagerImpl mThreadPoolManager;
+    private static HttpManager mHttpManager;
+    private static ThreadPoolManager mThreadPoolManager;
 
-    public static HttpManagerImpl http() {
+    public static HttpManager http() {
         if (mHttpManager == null) {
-            HttpManager.registerInstance();
+            HttpManagerImpl.registerInstance();
         }
         return mHttpManager;
     }
 
-    public static ThreadPoolManagerImpl thread() {
+    public static ThreadPoolManager thread() {
         if (mThreadPoolManager == null) {
-            ThreadPoolManager.registerInstance();
+            ThreadPoolManagerImpl.registerInstance();
         }
         return mThreadPoolManager;
     }
 
-    public static void setThreadPoolManager(ThreadPoolManager mThreadPoolManager) {
-        JH.mThreadPoolManager = mThreadPoolManager;
+    public static void setThreadPoolManager(ThreadPoolManagerImpl mThreadPoolManagerImpl) {
+        JH.mThreadPoolManager = mThreadPoolManagerImpl;
     }
 
-    public static void setHttpManager(HttpManager mHttpManager) {
-        JH.mHttpManager = mHttpManager;
+    public static void setHttpManager(HttpManagerImpl mHttpManagerImpl) {
+        JH.mHttpManager = mHttpManagerImpl;
     }
 }

@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">JHHttpUtil</string>
+    <string name="str_get">get</string>
+    <string name="str_post">post</string>
+</resources>

@@ -3,7 +3,6 @@ package com.jessehu.jhhttp.http;
 import java.io.IOException;
 
 import okhttp3.Callback;
-import okhttp3.Request;
 import okhttp3.Response;
 
 /**
@@ -97,4 +96,39 @@ public interface HttpManager {
      */
     Response post(RequestParams requestParams) throws IOException;
 
+    /**
+     * 文件上传，无进度回调
+     *
+     * @param key      请求参数名称
+     * @param url      请求链接
+     * @param filePath 文件路径
+     * @param callback 请求回调
+     */
+    void upload(String url, String key, String filePath, Callback callback);
+
+    /**
+     * 文件上传，无进度回调
+     *
+     * @param requestParams 请求参数
+     * @param callback      请求回调
+     */
+    void upload(RequestParams requestParams, Callback callback);
+
+    /**
+     * 文件上传，有进度回调
+     *
+     * @param key              请求参数名称
+     * @param url              请求链接
+     * @param filePath         文件路径
+     * @param progressCallback 进度回调
+     */
+    void upload(String url, String key, String filePath, ProgressCallback progressCallback);
+
+    /**
+     * 文件上传，有进度回调
+     *
+     * @param requestParams    请求参数
+     * @param progressCallback 进度回调
+     */
+    void upload(RequestParams requestParams, ProgressCallback progressCallback);
 }

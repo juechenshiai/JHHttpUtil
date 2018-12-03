@@ -36,6 +36,10 @@ public class HttpManagerImpl implements HttpManager {
     private static volatile HttpManagerImpl instance;
     private static final String TYPE_HTTP = "http";
     private static final String TYPE_HTTPS = "https";
+    private static final int METHOD_GET = 1;
+    private static final int METHOD_POST = 2;
+    private static final int METHOD_UPLOAD = 3;
+    private static final int METHOD_DOWNLOAD = 4;
 
     private ProgressCallback mProgressCallback;
 
@@ -56,7 +60,7 @@ public class HttpManagerImpl implements HttpManager {
 
     @Override
     public void get(RequestParams requestParams, Callback callback) {
-        Call call = getHttpRequestCall(requestParams, false);
+        Call call = getRequestCall(requestParams, METHOD_GET);
         call.enqueue(callback);
     }
 
@@ -68,7 +72,7 @@ public class HttpManagerImpl implements HttpManager {
 
     @Override
     public Response get(RequestParams requestParams) throws IOException {
-        Call call = getHttpRequestCall(requestParams, false);
+        Call call = getRequestCall(requestParams, METHOD_GET);
         return call.execute();
     }
 
@@ -80,7 +84,7 @@ public class HttpManagerImpl implements HttpManager {
 
     @Override
     public void post(RequestParams requestParams, Callback callback) {
-        Call call = getHttpRequestCall(requestParams, true);
+        Call call = getRequestCall(requestParams, METHOD_POST);
         call.enqueue(callback);
     }
 
@@ -92,7 +96,7 @@ public class HttpManagerImpl implements HttpManager {
 
     @Override
     public Response post(RequestParams requestParams) throws IOException {
-        Call call = getHttpRequestCall(requestParams, true);
+        Call call = getRequestCall(requestParams, METHOD_POST);
         return call.execute();
     }
 
@@ -105,7 +109,7 @@ public class HttpManagerImpl implements HttpManager {
 
     @Override
     public void upload(RequestParams requestParams, Callback callback) {
-        Call call = getUploadRequestCall(requestParams);
+        Call call = getRequestCall(requestParams, METHOD_UPLOAD);
         call.enqueue(callback);
     }
 
@@ -120,7 +124,7 @@ public class HttpManagerImpl implements HttpManager {
     public void upload(RequestParams requestParams, @NonNull ProgressCallback progressCallback) {
         this.mProgressCallback = progressCallback;
         progressCallback.onStarted();
-        Call call = getUploadRequestCall(requestParams);
+        Call call = getRequestCall(requestParams, METHOD_UPLOAD);
         call.enqueue(progressCallback);
     }
 
@@ -150,7 +154,7 @@ public class HttpManagerImpl implements HttpManager {
     }
 
     @Override
-    public void download(RequestParams requestParams, String filePath, String fileName, ProgressCallback progressCallback) {
+    public void download(RequestParams requestParams, String filePath, String fileName, final ProgressCallback progressCallback) {
 
     }
 
@@ -183,36 +187,14 @@ public class HttpManagerImpl implements HttpManager {
     }
 
     /**
-     * 获取HTTP请求Call对象
-     *
-     * @param requestParams 请求参数
-     * @param isPost        是否为POST请求
-     * @return OkHttp Call对象
-     */
-    private Call getHttpRequestCall(RequestParams requestParams, boolean isPost) {
-        return getRequestCall(requestParams, isPost, false);
-    }
-
-    /**
-     * 获取上传文件Call对象
-     *
-     * @param requestParams 请求参数
-     * @return OkHttp Call对象
-     */
-    private Call getUploadRequestCall(RequestParams requestParams) {
-        return getRequestCall(requestParams, true, true);
-    }
-
-    /**
      * 添加请求头和参数等到请求中
      *
      * @param requestParams 参数
-     * @param isPost        是否是POST请求
-     * @param isUpload      是否为上传文件
+     * @param method        请求方式
      * @return request call
      */
     @NonNull
-    private Call getRequestCall(RequestParams requestParams, boolean isPost, boolean isUpload) {
+    private Call getRequestCall(RequestParams requestParams, int method) {
         OkHttpClient okHttpClient = new OkHttpClient();
         Request.Builder requestBuilder = new Request.Builder();
         String url = requestParams.getUrl();
@@ -225,14 +207,19 @@ public class HttpManagerImpl implements HttpManager {
 
         addClientParams(requestParams, okHttpClient, url);
 
-        if (isPost) {
-            if (isUpload) {
-                doUpload(requestParams, requestBuilder);
-            } else {
+        switch (method) {
+            case METHOD_GET:
+                doGet(requestParams, requestBuilder);
+                break;
+            case METHOD_POST:
                 doPost(requestParams, requestBuilder);
-            }
-        } else {
-            doGet(requestParams, requestBuilder);
+                break;
+            case METHOD_UPLOAD:
+                doUpload(requestParams, requestBuilder);
+                break;
+            case METHOD_DOWNLOAD:
+                break;
+            default:
         }
 
         Request request = requestBuilder.build();

@@ -111,7 +111,9 @@ public class HttpManagerImpl implements HttpManager {
 
     @Override
     public void upload(String url, String key, String filePath, ProgressCallback progressCallback) {
-
+        RequestParams requestParams = new RequestParams(url);
+        requestParams.addFile(key, filePath);
+        upload(requestParams, progressCallback);
     }
 
     @Override

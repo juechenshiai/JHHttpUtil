@@ -37,6 +37,8 @@ public class HttpManagerImpl implements HttpManager {
     private static final String TYPE_HTTP = "http";
     private static final String TYPE_HTTPS = "https";
 
+    private ProgressCallback mProgressCallback;
+
     public static void registerInstance() {
         if (instance == null) {
             synchronized (LOCK) {
@@ -113,8 +115,11 @@ public class HttpManagerImpl implements HttpManager {
     }
 
     @Override
-    public void upload(RequestParams requestParams, ProgressCallback progressCallback) {
-
+    public void upload(RequestParams requestParams, @NonNull ProgressCallback progressCallback) {
+        this.mProgressCallback = progressCallback;
+        progressCallback.onStarted();
+        Call call = getUploadRequestCall(requestParams);
+        call.enqueue(progressCallback);
     }
 
     /**
@@ -300,6 +305,9 @@ public class HttpManagerImpl implements HttpManager {
                     String fileName = file.getName();
                     String mimeType = getMimeType(fileName);
                     RequestBody requestBody = RequestBody.create(MediaType.parse(mimeType), file);
+                    if (mProgressCallback != null) {
+                        requestBody = new ProgressRequestBody(requestBody, mProgressCallback);
+                    }
                     multiBodyBuilder.addFormDataPart(key, fileName, requestBody);
                     multiBodyBuilder.addFormDataPart("JHFileName", fileName);
                 } else {

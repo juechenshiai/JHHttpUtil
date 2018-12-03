@@ -99,8 +99,8 @@ public interface HttpManager {
     /**
      * 文件上传，无进度回调
      *
-     * @param key      请求参数名称
      * @param url      请求链接
+     * @param key      请求参数名称
      * @param filePath 文件路径
      * @param callback 请求回调
      */
@@ -117,8 +117,8 @@ public interface HttpManager {
     /**
      * 文件上传，有进度回调
      *
-     * @param key              请求参数名称
      * @param url              请求链接
+     * @param key              请求参数名称
      * @param filePath         文件路径
      * @param progressCallback 进度回调
      */
@@ -131,4 +131,58 @@ public interface HttpManager {
      * @param progressCallback 进度回调
      */
     void upload(RequestParams requestParams, ProgressCallback progressCallback);
+
+    /**
+     * 文件下载，有进度回调
+     *
+     * @param url              请求链接
+     * @param progressCallback 进度回调
+     */
+    void download(String url, ProgressCallback progressCallback);
+
+    /**
+     * 文件下载，有进度回调
+     *
+     * @param requestParams    请求参数
+     * @param progressCallback 进度回调
+     */
+    void download(RequestParams requestParams, ProgressCallback progressCallback);
+
+    /**
+     * 文件下载，有进度回调
+     *
+     * @param url              请求链接
+     * @param filePath         保存路径
+     * @param progressCallback 进度回调
+     */
+    void download(String url, String filePath, ProgressCallback progressCallback);
+
+    /**
+     * 文件下载，有进度回调
+     *
+     * @param requestParams    请求链接
+     * @param filePath         文件保存路径
+     * @param progressCallback 进度回调
+     */
+    void download(RequestParams requestParams, String filePath, ProgressCallback progressCallback);
+
+    /**
+     * 文件下载，有进度回调
+     *
+     * @param url              请求链接
+     * @param filePath         文件保存路径
+     * @param fileName         文件保存名称
+     * @param progressCallback 进度回调
+     */
+    void download(String url, String filePath, String fileName, ProgressCallback progressCallback);
+
+    /**
+     * 文件下载，有进度回调
+     *
+     * @param requestParams    请求参数
+     * @param filePath         文件保存路径
+     * @param fileName         文件保存名称
+     * @param progressCallback 进度回调
+     */
+    void download(RequestParams requestParams, String filePath, String fileName, ProgressCallback progressCallback);
 }

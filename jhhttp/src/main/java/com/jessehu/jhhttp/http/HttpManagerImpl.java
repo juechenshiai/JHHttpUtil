@@ -124,6 +124,36 @@ public class HttpManagerImpl implements HttpManager {
         call.enqueue(progressCallback);
     }
 
+    @Override
+    public void download(String url, ProgressCallback progressCallback) {
+
+    }
+
+    @Override
+    public void download(RequestParams requestParams, ProgressCallback progressCallback) {
+
+    }
+
+    @Override
+    public void download(String url, String filePath, ProgressCallback progressCallback) {
+
+    }
+
+    @Override
+    public void download(RequestParams requestParams, String filePath, ProgressCallback progressCallback) {
+
+    }
+
+    @Override
+    public void download(String url, String filePath, String fileName, ProgressCallback progressCallback) {
+
+    }
+
+    @Override
+    public void download(RequestParams requestParams, String filePath, String fileName, ProgressCallback progressCallback) {
+
+    }
+
     /**
      * 判断参数类型<br/>
      * 只支持String和Number<br/>

@@ -133,7 +133,8 @@ public interface HttpManager {
     void upload(RequestParams requestParams, ProgressCallback progressCallback);
 
     /**
-     * 文件下载，有进度回调
+     * 文件下载，有进度回调<br/>
+     * 默认保存到Download目录下，使用远端文件的名称
      *
      * @param url              请求链接
      * @param progressCallback 进度回调
@@ -141,7 +142,8 @@ public interface HttpManager {
     void download(String url, ProgressCallback progressCallback);
 
     /**
-     * 文件下载，有进度回调
+     * 文件下载，有进度回调<br/>
+     * 默认保存到Download目录下，使用远端文件的名称
      *
      * @param requestParams    请求参数
      * @param progressCallback 进度回调
@@ -149,7 +151,8 @@ public interface HttpManager {
     void download(RequestParams requestParams, ProgressCallback progressCallback);
 
     /**
-     * 文件下载，有进度回调
+     * 文件下载，有进度回调<br/>
+     * 支持自定义保存路径，默认使用远端文件的名称
      *
      * @param url              请求链接
      * @param filePath         保存路径
@@ -158,7 +161,8 @@ public interface HttpManager {
     void download(String url, String filePath, ProgressCallback progressCallback);
 
     /**
-     * 文件下载，有进度回调
+     * 文件下载，有进度回调<br/>
+     * 支持自定义保存路径，默认使用远端文件的名称
      *
      * @param requestParams    请求链接
      * @param filePath         文件保存路径
@@ -167,7 +171,8 @@ public interface HttpManager {
     void download(RequestParams requestParams, String filePath, ProgressCallback progressCallback);
 
     /**
-     * 文件下载，有进度回调
+     * 文件下载，有进度回调<br/>
+     * 支持自定义保存路径及名称
      *
      * @param url              请求链接
      * @param filePath         文件保存路径
@@ -177,7 +182,8 @@ public interface HttpManager {
     void download(String url, String filePath, String fileName, ProgressCallback progressCallback);
 
     /**
-     * 文件下载，有进度回调
+     * 文件下载，有进度回调<br/>
+     * 支持自定义保存路径及名称
      *
      * @param requestParams    请求参数
      * @param filePath         文件保存路径

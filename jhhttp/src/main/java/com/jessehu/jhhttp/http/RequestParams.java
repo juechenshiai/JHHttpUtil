@@ -1,5 +1,6 @@
 package com.jessehu.jhhttp.http;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -145,5 +146,18 @@ public class RequestParams {
 
     public void addBodyParams(String key, Object value) {
         bodyParams.put(key, value);
+    }
+
+    public void addFile(String key, String filePath) {
+        File file = new File(filePath);
+        addFile(key, file);
+    }
+
+    public void addFile(String key, File file) {
+        if (file.exists()) {
+            bodyParams.put(key, file);
+        } else {
+            throw new RuntimeException("File is not exists");
+        }
     }
 }

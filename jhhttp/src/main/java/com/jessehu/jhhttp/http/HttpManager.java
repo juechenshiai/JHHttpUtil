@@ -134,21 +134,27 @@ public interface HttpManager {
 
     /**
      * 文件下载，有进度回调<br/>
-     * 默认保存到Download目录下，使用远端文件的名称
+     * 可以选择自动下载或者自己处理下载<br/>
+     * 直到下载默认保存到Download目录下，使用远端文件的名称<br/>
+     * 自己处理下载将不会下载文件，所有下载及保存操作自行处理
      *
      * @param url              请求链接
+     * @param autoDownload     是否自动下载 true：直到现在，false：自己处理下载
      * @param progressCallback 进度回调
      */
-    void download(String url, ProgressCallback progressCallback);
+    void download(String url, boolean autoDownload, ProgressCallback progressCallback);
 
     /**
      * 文件下载，有进度回调<br/>
-     * 默认保存到Download目录下，使用远端文件的名称
+     * 可以选择自动下载或者自己处理下载<br/>
+     * 直到下载默认保存到Download目录下，使用远端文件的名称<br/>
+     * 自己处理下载将不会下载文件，所有下载及保存操作自行处理
      *
      * @param requestParams    请求参数
+     * @param autoDownload     是否自动下载 true：直到现在，false：自己处理下载
      * @param progressCallback 进度回调
      */
-    void download(RequestParams requestParams, ProgressCallback progressCallback);
+    void download(RequestParams requestParams, boolean autoDownload, ProgressCallback progressCallback);
 
     /**
      * 文件下载，有进度回调<br/>

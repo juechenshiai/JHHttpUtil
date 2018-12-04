@@ -1,6 +1,7 @@
 package com.jessehu.jhhttp.http;
 
 import android.os.Environment;
+import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.webkit.MimeTypeMap;
 import android.webkit.URLUtil;
@@ -14,6 +15,7 @@ import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.net.FileNameMap;
 import java.net.URLConnection;
+import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.HostnameVerifier;
@@ -47,8 +49,10 @@ public class HttpManagerImpl implements HttpManager {
     private static final int METHOD_POST = 2;
     private static final int METHOD_UPLOAD = 3;
     private static final int METHOD_DOWNLOAD = 4;
+    private static final String FILENAME_SEQUENCE_SEPARATOR = "-";
 
     // TODO: 2018/12/4 json格式数据传输
+    // TODO: 2018/12/4 断点续传
 
     public static void registerInstance() {
         if (instance == null) {
@@ -197,7 +201,7 @@ public class HttpManagerImpl implements HttpManager {
                     name = URLUtil.guessFileName(url, null, mimeType);
                 }
                 File file = new File(path, name);
-                saveFile(call, response, file, progressCallback);
+                saveFile(call, response, chooseUniqueFilename(file), progressCallback);
             }
         });
     }
@@ -453,6 +457,37 @@ public class HttpManagerImpl implements HttpManager {
             };
             clientBuilder.addInterceptor(interceptor);
         }
+    }
+
+    /**
+     * 判断重名文件并重命名
+     *
+     * @param file 下载的文件
+     * @return 重命名后的文件
+     */
+    private File chooseUniqueFilename(File file) {
+        Random sRandom = new Random(SystemClock.uptimeMillis());
+        String filePath = file.getAbsolutePath();
+        if (!file.exists()) {
+            return file;
+        }
+        String filename = filePath.substring(0, filePath.lastIndexOf("."));
+        String extension = filePath.substring(filePath.lastIndexOf("."), filePath.length());
+
+        filename = filename + FILENAME_SEQUENCE_SEPARATOR;
+
+        int sequence = 1;
+        for (int magnitude = 1; magnitude < Integer.MAX_VALUE; magnitude *= 10) {
+            for (int iteration = 0; iteration < 9; ++iteration) {
+                filePath = filename + sequence + extension;
+                File file1 = new File(filePath);
+                if (!file1.exists()) {
+                    return file1;
+                }
+                sequence += sRandom.nextInt(magnitude) + 1;
+            }
+        }
+        return file;
     }
 
 }

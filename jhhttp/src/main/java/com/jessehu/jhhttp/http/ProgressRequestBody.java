@@ -56,14 +56,14 @@ public class ProgressRequestBody extends RequestBody {
         return new ForwardingSink(sink) {
             long bytesWritten = 0L;
             long contentLength = 0L;
-            float percent = 0;
+            float percent = 0F;
 
             @Override
             public void write(@NonNull Buffer source, long byteCount) throws IOException {
                 super.write(source, byteCount);
                 if (contentLength == 0) {
-                    if (contentLength() == 0) {
-                        throw new RuntimeException("File size is 0");
+                    if (contentLength() == -1) {
+                        throw new RuntimeException("File is not exist");
                     } else {
                         contentLength = contentLength();
                     }

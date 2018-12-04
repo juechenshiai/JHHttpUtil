@@ -1,11 +1,17 @@
 package com.jessehu.jhhttp.http;
 
+import android.os.Environment;
 import android.support.annotation.NonNull;
+import android.webkit.MimeTypeMap;
+import android.webkit.URLUtil;
 
 import com.jessehu.jhhttp.JH;
 
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.RandomAccessFile;
 import java.net.FileNameMap;
 import java.net.URLConnection;
 import java.util.concurrent.TimeUnit;
@@ -18,6 +24,7 @@ import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.FormBody;
 import okhttp3.HttpUrl;
+import okhttp3.Interceptor;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.OkHttpClient;
@@ -41,7 +48,7 @@ public class HttpManagerImpl implements HttpManager {
     private static final int METHOD_UPLOAD = 3;
     private static final int METHOD_DOWNLOAD = 4;
 
-    private ProgressCallback mProgressCallback;
+    // TODO: 2018/12/4 json格式数据传输
 
     public static void registerInstance() {
         if (instance == null) {
@@ -60,7 +67,7 @@ public class HttpManagerImpl implements HttpManager {
 
     @Override
     public void get(RequestParams requestParams, Callback callback) {
-        Call call = getRequestCall(requestParams, METHOD_GET);
+        Call call = getRequestCall(requestParams, METHOD_GET, null);
         call.enqueue(callback);
     }
 
@@ -72,7 +79,7 @@ public class HttpManagerImpl implements HttpManager {
 
     @Override
     public Response get(RequestParams requestParams) throws IOException {
-        Call call = getRequestCall(requestParams, METHOD_GET);
+        Call call = getRequestCall(requestParams, METHOD_GET, null);
         return call.execute();
     }
 
@@ -84,7 +91,7 @@ public class HttpManagerImpl implements HttpManager {
 
     @Override
     public void post(RequestParams requestParams, Callback callback) {
-        Call call = getRequestCall(requestParams, METHOD_POST);
+        Call call = getRequestCall(requestParams, METHOD_POST, null);
         call.enqueue(callback);
     }
 
@@ -96,7 +103,7 @@ public class HttpManagerImpl implements HttpManager {
 
     @Override
     public Response post(RequestParams requestParams) throws IOException {
-        Call call = getRequestCall(requestParams, METHOD_POST);
+        Call call = getRequestCall(requestParams, METHOD_POST, null);
         return call.execute();
     }
 
@@ -109,7 +116,7 @@ public class HttpManagerImpl implements HttpManager {
 
     @Override
     public void upload(RequestParams requestParams, Callback callback) {
-        Call call = getRequestCall(requestParams, METHOD_UPLOAD);
+        Call call = getRequestCall(requestParams, METHOD_UPLOAD, null);
         call.enqueue(callback);
     }
 
@@ -122,40 +129,127 @@ public class HttpManagerImpl implements HttpManager {
 
     @Override
     public void upload(RequestParams requestParams, @NonNull ProgressCallback progressCallback) {
-        this.mProgressCallback = progressCallback;
         progressCallback.onStarted();
-        Call call = getRequestCall(requestParams, METHOD_UPLOAD);
+        Call call = getRequestCall(requestParams, METHOD_UPLOAD, progressCallback);
         call.enqueue(progressCallback);
     }
 
     @Override
-    public void download(String url, ProgressCallback progressCallback) {
-
+    public void download(String url, boolean autoDownload, ProgressCallback progressCallback) {
+        RequestParams requestParams = new RequestParams(url);
+        download(requestParams, autoDownload, progressCallback);
     }
 
     @Override
-    public void download(RequestParams requestParams, ProgressCallback progressCallback) {
-
+    public void download(RequestParams requestParams, boolean autoDownload, ProgressCallback progressCallback) {
+        if (autoDownload) {
+            download(requestParams, null, null, progressCallback);
+        } else {
+            progressCallback.onStarted();
+            Call call = getRequestCall(requestParams, METHOD_DOWNLOAD, progressCallback);
+            call.enqueue(progressCallback);
+        }
     }
 
     @Override
     public void download(String url, String filePath, ProgressCallback progressCallback) {
-
+        RequestParams requestParams = new RequestParams(url);
+        download(requestParams, filePath, progressCallback);
     }
 
     @Override
     public void download(RequestParams requestParams, String filePath, ProgressCallback progressCallback) {
-
+        File file = new File(filePath);
+        if (file.isDirectory()) {
+            download(requestParams, filePath, null, progressCallback);
+        } else {
+            download(requestParams, file.getParent(), file.getName(), progressCallback);
+        }
     }
 
     @Override
     public void download(String url, String filePath, String fileName, ProgressCallback progressCallback) {
-
+        RequestParams requestParams = new RequestParams(url);
+        download(requestParams, filePath, fileName, progressCallback);
     }
 
     @Override
-    public void download(RequestParams requestParams, String filePath, String fileName, final ProgressCallback progressCallback) {
+    public void download(final RequestParams requestParams, final String filePath, final String fileName, final ProgressCallback progressCallback) {
+        progressCallback.onStarted();
+        Call call = getRequestCall(requestParams, METHOD_DOWNLOAD, progressCallback);
+        call.enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                progressCallback.onFailure(call, e);
+            }
 
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                progressCallback.onResponse(call, response);
+                String path = filePath;
+                if (path == null) {
+                    path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath();
+                }
+                String name = fileName;
+                if (name == null) {
+                    String url = response.request().url().toString();
+                    String mimeType = MimeTypeMap.getFileExtensionFromUrl(url);
+                    name = URLUtil.guessFileName(url, null, mimeType);
+                }
+                File file = new File(path, name);
+                saveFile(call, response, file, progressCallback);
+            }
+        });
+    }
+
+    /**
+     * 保存下载的文件
+     *
+     * @param call             Call
+     * @param response         Response
+     * @param file             要保存的文件
+     * @param progressCallback 进度回调
+     */
+    private void saveFile(Call call, Response response, File file, ProgressCallback progressCallback) {
+        InputStream is = null;
+        RandomAccessFile randomAccessFile = null;
+        BufferedInputStream bis = null;
+        byte[] buff = new byte[2048];
+        int len;
+        try {
+            is = response.body().byteStream();
+            bis = new BufferedInputStream(is);
+
+            File parentFile = file.getParentFile();
+            if (!parentFile.exists()) {
+                parentFile.mkdirs();
+            }
+            // 随机访问文件，可以指定断点续传的起始位置
+            randomAccessFile = new RandomAccessFile(file, "rwd");
+//                    randomAccessFile.seek (startsPoint);
+            while ((len = bis.read(buff)) != -1) {
+                randomAccessFile.write(buff, 0, len);
+            }
+
+            // 下载完成
+            progressCallback.onFinished();
+        } catch (IOException e) {
+            progressCallback.onFailure(call, e);
+        } finally {
+            try {
+                if (is != null) {
+                    is.close();
+                }
+                if (bis != null) {
+                    bis.close();
+                }
+                if (randomAccessFile != null) {
+                    randomAccessFile.close();
+                }
+            } catch (IOException e) {
+                progressCallback.onFailure(call, e);
+            }
+        }
     }
 
     /**
@@ -194,8 +288,8 @@ public class HttpManagerImpl implements HttpManager {
      * @return request call
      */
     @NonNull
-    private Call getRequestCall(RequestParams requestParams, int method) {
-        OkHttpClient okHttpClient = new OkHttpClient();
+    private Call getRequestCall(RequestParams requestParams, int method, ProgressCallback progressCallback) {
+        OkHttpClient.Builder clientBuilder = new OkHttpClient().newBuilder();
         Request.Builder requestBuilder = new Request.Builder();
         String url = requestParams.getUrl();
         if (url == null) {
@@ -204,8 +298,7 @@ public class HttpManagerImpl implements HttpManager {
         requestBuilder.url(url);
 
         addHeaders(requestParams, requestBuilder);
-
-        addClientParams(requestParams, okHttpClient, url);
+        addClientParams(requestParams, clientBuilder, url);
 
         switch (method) {
             case METHOD_GET:
@@ -215,26 +308,27 @@ public class HttpManagerImpl implements HttpManager {
                 doPost(requestParams, requestBuilder);
                 break;
             case METHOD_UPLOAD:
-                doUpload(requestParams, requestBuilder);
+                doUpload(requestParams, requestBuilder, progressCallback);
                 break;
             case METHOD_DOWNLOAD:
+                doDownload(clientBuilder, progressCallback);
                 break;
             default:
         }
 
         Request request = requestBuilder.build();
-        return okHttpClient.newCall(request);
+        return clientBuilder.build().newCall(request);
     }
+
 
     /**
      * 添加Client参数
      *
      * @param requestParams 请求参数
-     * @param okHttpClient  OkHttpClient
+     * @param clientBuilder OkHttpClient.Builder
      * @param url           请求连接
      */
-    private void addClientParams(RequestParams requestParams, OkHttpClient okHttpClient, String url) {
-        OkHttpClient.Builder clientBuilder = okHttpClient.newBuilder();
+    private void addClientParams(RequestParams requestParams, OkHttpClient.Builder clientBuilder, String url) {
         clientBuilder.connectTimeout(requestParams.getConnectTimeout(), TimeUnit.MILLISECONDS);
         clientBuilder.writeTimeout(requestParams.getWriteTimeout(), TimeUnit.MILLISECONDS);
         clientBuilder.writeTimeout(requestParams.getWriteTimeout(), TimeUnit.MILLISECONDS);
@@ -312,7 +406,7 @@ public class HttpManagerImpl implements HttpManager {
      * @param requestParams  请求参数
      * @param requestBuilder Request.Builder
      */
-    private void doUpload(RequestParams requestParams, Request.Builder requestBuilder) {
+    private void doUpload(RequestParams requestParams, Request.Builder requestBuilder, ProgressCallback progressCallback) {
         MultipartBody.Builder multiBodyBuilder = new MultipartBody.Builder();
         multiBodyBuilder.setType(MultipartBody.FORM);
         for (String key : requestParams.getBodyParams().keySet()) {
@@ -324,8 +418,8 @@ public class HttpManagerImpl implements HttpManager {
                     String fileName = file.getName();
                     String mimeType = getMimeType(fileName);
                     RequestBody requestBody = RequestBody.create(MediaType.parse(mimeType), file);
-                    if (mProgressCallback != null) {
-                        requestBody = new ProgressRequestBody(requestBody, mProgressCallback);
+                    if (progressCallback != null) {
+                        requestBody = new ProgressRequestBody(requestBody, progressCallback);
                     }
                     multiBodyBuilder.addFormDataPart(key, fileName, requestBody);
                     multiBodyBuilder.addFormDataPart("JHFileName", fileName);
@@ -338,6 +432,27 @@ public class HttpManagerImpl implements HttpManager {
             }
         }
         requestBuilder.post(multiBodyBuilder.build());
+    }
+
+    /**
+     * 设置文件下载拦截器
+     *
+     * @param clientBuilder OkHttpClient.Builder
+     */
+    private void doDownload(OkHttpClient.Builder clientBuilder, final ProgressCallback progressCallback) {
+        if (progressCallback != null) {
+            // 重写ResponseBody监听请求
+            Interceptor interceptor = new Interceptor() {
+                @Override
+                public Response intercept(Chain chain) throws IOException {
+                    Response originalResponse = chain.proceed(chain.request());
+                    return originalResponse.newBuilder()
+                            .body(new ProgressResponseBody(originalResponse.body(), progressCallback))
+                            .build();
+                }
+            };
+            clientBuilder.addInterceptor(interceptor);
+        }
     }
 
 }

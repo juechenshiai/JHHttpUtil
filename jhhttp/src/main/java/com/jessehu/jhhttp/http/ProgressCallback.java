@@ -10,21 +10,21 @@ import okhttp3.Callback;
  */
 public interface ProgressCallback extends Callback {
     /**
-     * 开始上传
+     * 开始请求
      */
     void onStarted();
 
     /**
-     * 上传进度
+     * 传输(上传/下载)进度
      *
      * @param totalLength  文件大小
-     * @param bytesWritten 已上传大小
-     * @param percent      上传百分比
+     * @param bytesWritten 已传输大小
+     * @param percent      传输百分比
      */
     void onProgress(long totalLength, long bytesWritten, float percent);
 
     /**
-     * 上传完成
+     * 传输完成
      */
     void onFinished();
 }

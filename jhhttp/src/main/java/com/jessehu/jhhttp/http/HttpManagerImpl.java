@@ -6,6 +6,7 @@ import android.support.annotation.NonNull;
 import android.webkit.MimeTypeMap;
 import android.webkit.URLUtil;
 
+import com.alibaba.fastjson.JSON;
 import com.jessehu.jhhttp.JH;
 
 import java.io.BufferedInputStream;
@@ -302,7 +303,7 @@ public class HttpManagerImpl implements HttpManager {
         requestBuilder.url(url);
 
         addHeaders(requestParams, requestBuilder);
-        addClientParams(requestParams, clientBuilder, url);
+        addClientParams(requestParams, clientBuilder);
 
         switch (method) {
             case METHOD_GET:
@@ -315,7 +316,7 @@ public class HttpManagerImpl implements HttpManager {
                 doUpload(requestParams, requestBuilder, progressCallback);
                 break;
             case METHOD_DOWNLOAD:
-                doDownload(clientBuilder, progressCallback);
+                doDownload(clientBuilder, requestBuilder, progressCallback);
                 break;
             default:
         }
@@ -330,14 +331,13 @@ public class HttpManagerImpl implements HttpManager {
      *
      * @param requestParams 请求参数
      * @param clientBuilder OkHttpClient.Builder
-     * @param url           请求连接
      */
-    private void addClientParams(RequestParams requestParams, OkHttpClient.Builder clientBuilder, String url) {
+    private void addClientParams(RequestParams requestParams, OkHttpClient.Builder clientBuilder) {
         clientBuilder.connectTimeout(requestParams.getConnectTimeout(), TimeUnit.MILLISECONDS);
         clientBuilder.writeTimeout(requestParams.getWriteTimeout(), TimeUnit.MILLISECONDS);
         clientBuilder.writeTimeout(requestParams.getWriteTimeout(), TimeUnit.MILLISECONDS);
 
-        if (url.startsWith(TYPE_HTTPS)) {
+        if (requestParams.getUrl().startsWith(TYPE_HTTPS)) {
             HostnameVerifier hostnameVerifier = requestParams.getHostnameVerifier();
             SSLSocketFactory sslSocketFactory = requestParams.getSslSocketFactory();
             X509TrustManager x509TrustManager = requestParams.getX509TrustManager();
@@ -373,7 +373,8 @@ public class HttpManagerImpl implements HttpManager {
      * @param requestBuilder Request.Builder
      */
     private void doGet(RequestParams requestParams, Request.Builder requestBuilder) {
-        HttpUrl.Builder httpUrlBuilder = new HttpUrl.Builder();
+        HttpUrl httpUrl = HttpUrl.parse(requestParams.getUrl());
+        HttpUrl.Builder httpUrlBuilder = httpUrl.newBuilder();
         for (String key : requestParams.getBodyParams().keySet()) {
             Object value = requestParams.getBodyParams().get(key);
             if (typeJudgment(value)) {
@@ -382,6 +383,7 @@ public class HttpManagerImpl implements HttpManager {
                 throw new RuntimeException("Parameter types are not supported");
             }
         }
+        requestBuilder.url(httpUrlBuilder.build());
         requestBuilder.get();
     }
 
@@ -392,16 +394,26 @@ public class HttpManagerImpl implements HttpManager {
      * @param requestBuilder Request.Builder
      */
     private void doPost(RequestParams requestParams, Request.Builder requestBuilder) {
-        FormBody.Builder formBodyBuilder = new FormBody.Builder();
-        for (String key : requestParams.getBodyParams().keySet()) {
-            Object value = requestParams.getBodyParams().get(key);
-            if (typeJudgment(value)) {
-                formBodyBuilder.add(key, value == null ? "" : value.toString());
-            } else {
-                throw new RuntimeException("Parameter types are not supported");
+        if (requestParams.isAsJsonContent()) {
+            String jsonString = requestParams.getJsonString();
+            if (jsonString == null) {
+                jsonString = JSON.toJSONString(requestParams.getBodyParams());
             }
+            RequestBody requestBody = FormBody.create(MediaType.parse("application/json; charset=utf-8"), jsonString);
+            requestBuilder.post(requestBody);
+        } else {
+            FormBody.Builder formBodyBuilder = new FormBody.Builder();
+            for (String key : requestParams.getBodyParams().keySet()) {
+                Object value = requestParams.getBodyParams().get(key);
+                if (typeJudgment(value)) {
+                    formBodyBuilder.add(key, value == null ? "" : value.toString());
+                } else {
+                    throw new RuntimeException("Parameter types are not supported");
+                }
+            }
+            requestBuilder.post(formBodyBuilder.build());
         }
-        requestBuilder.post(formBodyBuilder.build());
+
     }
 
     /**
@@ -443,7 +455,7 @@ public class HttpManagerImpl implements HttpManager {
      *
      * @param clientBuilder OkHttpClient.Builder
      */
-    private void doDownload(OkHttpClient.Builder clientBuilder, final ProgressCallback progressCallback) {
+    private void doDownload(OkHttpClient.Builder clientBuilder, Request.Builder requestBuilder, final ProgressCallback progressCallback) {
         if (progressCallback != null) {
             // 重写ResponseBody监听请求
             Interceptor interceptor = new Interceptor() {

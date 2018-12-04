@@ -38,6 +38,8 @@ public class RequestParams {
 
     private Map<String, Object> headers;
     private Map<String, Object> bodyParams;
+    private boolean asJsonContent = false;
+    private String jsonString;
 
     public RequestParams() {
         headers = new HashMap<>();
@@ -138,6 +140,22 @@ public class RequestParams {
 
     public Map<String, Object> getBodyParams() {
         return bodyParams;
+    }
+
+    public boolean isAsJsonContent() {
+        return asJsonContent;
+    }
+
+    public void setAsJsonContent(boolean asJsonContent) {
+        this.asJsonContent = asJsonContent;
+    }
+
+    public String getJsonString() {
+        return jsonString;
+    }
+
+    public void setJsonString(String jsonString) {
+        this.jsonString = jsonString;
     }
 
     public void setBodyParams(Map<String, Object> bodyParams) {

@@ -1,5 +1,7 @@
 package com.jessehu.jhhttp.http;
 
+import com.jessehu.jhhttp.http.callback.ProgressCallback;
+
 import java.io.IOException;
 
 import okhttp3.Callback;

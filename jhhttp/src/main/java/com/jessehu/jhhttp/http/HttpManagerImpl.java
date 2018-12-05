@@ -8,6 +8,9 @@ import android.webkit.URLUtil;
 
 import com.alibaba.fastjson.JSON;
 import com.jessehu.jhhttp.JH;
+import com.jessehu.jhhttp.http.callback.ProgressCallback;
+import com.jessehu.jhhttp.http.progress.ProgressRequestBody;
+import com.jessehu.jhhttp.http.progress.ProgressResponseBody;
 
 import java.io.BufferedInputStream;
 import java.io.File;

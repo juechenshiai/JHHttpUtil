@@ -1,4 +1,4 @@
-package com.jessehu.jhhttp.http;
+package com.jessehu.jhhttp.http.callback;
 
 import okhttp3.Callback;
 

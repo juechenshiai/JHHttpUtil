@@ -17,7 +17,7 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import com.jessehu.jhhttp.JH;
-import com.jessehu.jhhttp.http.ProgressCallback;
+import com.jessehu.jhhttp.http.callback.ProgressCallback;
 import com.jessehu.jhhttp.http.RequestParams;
 
 import java.io.IOException;

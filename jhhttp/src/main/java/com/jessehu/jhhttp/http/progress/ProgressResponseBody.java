@@ -1,4 +1,6 @@
-package com.jessehu.jhhttp.http;
+package com.jessehu.jhhttp.http.progress;
+
+import com.jessehu.jhhttp.http.callback.ProgressCallback;
 
 import java.io.IOException;
 import java.text.NumberFormat;

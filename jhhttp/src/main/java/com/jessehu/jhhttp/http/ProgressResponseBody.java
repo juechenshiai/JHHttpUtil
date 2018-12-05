@@ -21,10 +21,12 @@ import okio.Okio;
 public class ProgressResponseBody extends ResponseBody {
     private ResponseBody mResponseBody;
     private ProgressCallback mCallback;
+    private long startPoint;
 
-    public ProgressResponseBody(ResponseBody mResponseBody, ProgressCallback mCallback) {
+    public ProgressResponseBody(ResponseBody mResponseBody, long startPoint, ProgressCallback mCallback) {
         this.mResponseBody = mResponseBody;
         this.mCallback = mCallback;
+        this.startPoint = startPoint;
     }
 
     @Nullable
@@ -41,7 +43,7 @@ public class ProgressResponseBody extends ResponseBody {
     @Override
     public BufferedSource source() {
         return Okio.buffer(new ForwardingSource(mResponseBody.source()) {
-            private long bytesRead = 0L;
+            private long allBytesRead = 0L;
             private long totalLength = 0L;
             float percent = 0F;
 
@@ -55,13 +57,13 @@ public class ProgressResponseBody extends ResponseBody {
                     }
                 }
                 long bytesRead = super.read(sink, byteCount);
-                this.bytesRead += bytesRead == -1 ? 0 : bytesRead;
-                percent = this.bytesRead * 100F / totalLength;
+                this.allBytesRead += bytesRead == -1 ? 0 : bytesRead;
+                percent = (this.allBytesRead + startPoint) * 100F / totalLength;
                 NumberFormat nf = NumberFormat.getNumberInstance();
                 nf.setMaximumFractionDigits(2);
                 percent = Float.valueOf(nf.format(percent));
-                mCallback.onProgress(totalLength, this.bytesRead, percent);
-                if (totalLength == this.bytesRead) {
+                mCallback.onProgress(totalLength, this.allBytesRead + startPoint, percent);
+                if (totalLength == this.allBytesRead) {
                     mCallback.onFinished();
                 }
                 return bytesRead;

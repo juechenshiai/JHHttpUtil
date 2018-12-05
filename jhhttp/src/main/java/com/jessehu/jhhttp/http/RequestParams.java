@@ -15,8 +15,11 @@ import javax.net.ssl.X509TrustManager;
  * @date 2018/11/29
  */
 public class RequestParams {
-    private String charset = "UTF-8";
+    /**
+     * 请求链接
+     */
     private String url;
+
     private X509TrustManager x509TrustManager;
     private SSLSocketFactory sslSocketFactory;
     /**
@@ -38,6 +41,7 @@ public class RequestParams {
 
     private Map<String, Object> headers;
     private Map<String, Object> bodyParams;
+    private ResumeStartPoint resumeStartPoint;
     private boolean asJsonContent = false;
     private String jsonString;
 
@@ -60,14 +64,6 @@ public class RequestParams {
         sslSocketFactory = CertManager.getSocketFactory(cert);
         x509TrustManager = CertManager.getX509TrustManager(cert);
         hostnameVerifier = new CertManager.MyHostnameVerifier(host);
-    }
-
-    public String getCharset() {
-        return charset;
-    }
-
-    public void setCharset(String charset) {
-        this.charset = charset;
     }
 
     public String getUrl() {
@@ -138,6 +134,20 @@ public class RequestParams {
         headers.put(key, value);
     }
 
+    public ResumeStartPoint getResumeStartPoint() {
+        return resumeStartPoint;
+    }
+
+    public void setResumeStartPoint(ResumeStartPoint resumeStartPoint) {
+        this.resumeStartPoint = resumeStartPoint;
+        headers.put(resumeStartPoint.resumeKey, resumeStartPoint.resumePoint);
+    }
+
+    public void setResumeStartPoint(String key, long value) {
+        this.resumeStartPoint = new ResumeStartPoint(key, value);
+        headers.put(resumeStartPoint.resumeKey, resumeStartPoint.resumePoint);
+    }
+
     public Map<String, Object> getBodyParams() {
         return bodyParams;
     }
@@ -176,6 +186,17 @@ public class RequestParams {
             bodyParams.put(key, file);
         } else {
             throw new RuntimeException("File is not exists");
+        }
+    }
+
+    public static class ResumeStartPoint {
+
+        public String resumeKey;
+        public long resumePoint;
+
+        public ResumeStartPoint(String resumeKey, long resumePoint) {
+            this.resumeKey = resumeKey;
+            this.resumePoint = resumePoint;
         }
     }
 }

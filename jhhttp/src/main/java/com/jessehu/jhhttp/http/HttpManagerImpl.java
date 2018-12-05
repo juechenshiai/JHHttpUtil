@@ -51,9 +51,7 @@ public class HttpManagerImpl implements HttpManager {
     private static final int METHOD_UPLOAD = 3;
     private static final int METHOD_DOWNLOAD = 4;
     private static final String FILENAME_SEQUENCE_SEPARATOR = "-";
-
-    // TODO: 2018/12/4 json格式数据传输
-    // TODO: 2018/12/4 断点续传
+    private static final String SUFFIX_TEMP = ".temp";
 
     public static void registerInstance() {
         if (instance == null) {
@@ -202,7 +200,17 @@ public class HttpManagerImpl implements HttpManager {
                     name = URLUtil.guessFileName(url, null, mimeType);
                 }
                 File file = new File(path, name);
-                saveFile(call, response, chooseUniqueFilename(file), progressCallback);
+                RequestParams.ResumeStartPoint resumeStartPoint = requestParams.getResumeStartPoint();
+                long startPoint = 0L;
+                if (resumeStartPoint != null) {
+                    String resumeKey = resumeStartPoint.resumeKey;
+                    if (resumeKey != null) {
+                        String startPointStr = response.header(resumeKey);
+                        startPointStr = startPointStr == null ? "0" : startPointStr;
+                        startPoint = Long.parseLong(startPointStr);
+                    }
+                }
+                saveFile(call, response, chooseUniqueTempFile(file), startPoint, progressCallback);
             }
         });
     }
@@ -212,10 +220,11 @@ public class HttpManagerImpl implements HttpManager {
      *
      * @param call             Call
      * @param response         Response
-     * @param file             要保存的文件
+     * @param tempFile         下载换成文件
+     * @param startPoint       断点续传起始点
      * @param progressCallback 进度回调
      */
-    private void saveFile(Call call, Response response, File file, ProgressCallback progressCallback) {
+    private void saveFile(Call call, Response response, File tempFile, long startPoint, ProgressCallback progressCallback) {
         InputStream is = null;
         RandomAccessFile randomAccessFile = null;
         BufferedInputStream bis = null;
@@ -225,16 +234,19 @@ public class HttpManagerImpl implements HttpManager {
             is = response.body().byteStream();
             bis = new BufferedInputStream(is);
 
-            File parentFile = file.getParentFile();
+            File parentFile = tempFile.getParentFile();
             if (!parentFile.exists()) {
                 parentFile.mkdirs();
             }
             // 随机访问文件，可以指定断点续传的起始位置
-            randomAccessFile = new RandomAccessFile(file, "rwd");
-//                    randomAccessFile.seek (startsPoint);
+            randomAccessFile = new RandomAccessFile(tempFile, "rwd");
+            randomAccessFile.seek(startPoint);
             while ((len = bis.read(buff)) != -1) {
                 randomAccessFile.write(buff, 0, len);
             }
+
+            String absolutePath = tempFile.getAbsolutePath();
+            tempFile.renameTo(new File(absolutePath.substring(0, absolutePath.length() - SUFFIX_TEMP.length())));
 
             // 下载完成
             progressCallback.onFinished();
@@ -302,7 +314,7 @@ public class HttpManagerImpl implements HttpManager {
         }
         requestBuilder.url(url);
 
-        addHeaders(requestParams, requestBuilder);
+        addHeaders(requestParams, requestBuilder, method);
         addClientParams(requestParams, clientBuilder);
 
         switch (method) {
@@ -316,7 +328,7 @@ public class HttpManagerImpl implements HttpManager {
                 doUpload(requestParams, requestBuilder, progressCallback);
                 break;
             case METHOD_DOWNLOAD:
-                doDownload(clientBuilder, requestBuilder, progressCallback);
+                doDownload(requestParams, clientBuilder, progressCallback);
                 break;
             default:
         }
@@ -355,7 +367,14 @@ public class HttpManagerImpl implements HttpManager {
      * @param requestParams  请求参数
      * @param requestBuilder Request.Builder
      */
-    private void addHeaders(RequestParams requestParams, Request.Builder requestBuilder) {
+    private void addHeaders(RequestParams requestParams, Request.Builder requestBuilder, int method) {
+        if (method == METHOD_DOWNLOAD && requestParams.getResumeStartPoint() != null) {
+            String resumeKey = requestParams.getResumeStartPoint().resumeKey;
+            if (resumeKey != null) {
+                String resumePoint = requestParams.getResumeStartPoint().resumePoint + "";
+                requestBuilder.addHeader(resumeKey, resumePoint);
+            }
+        }
         for (String key : requestParams.getHeaders().keySet()) {
             Object value = requestParams.getHeaders().get(key);
             if (typeJudgment(value)) {
@@ -453,17 +472,29 @@ public class HttpManagerImpl implements HttpManager {
     /**
      * 设置文件下载拦截器
      *
-     * @param clientBuilder OkHttpClient.Builder
+     * @param requestParams    请求参数
+     * @param clientBuilder    OkHttpClient.Builder
+     * @param progressCallback 进度回调
      */
-    private void doDownload(OkHttpClient.Builder clientBuilder, Request.Builder requestBuilder, final ProgressCallback progressCallback) {
+    private void doDownload(final RequestParams requestParams, OkHttpClient.Builder clientBuilder, final ProgressCallback progressCallback) {
         if (progressCallback != null) {
             // 重写ResponseBody监听请求
             Interceptor interceptor = new Interceptor() {
                 @Override
                 public Response intercept(Chain chain) throws IOException {
                     Response originalResponse = chain.proceed(chain.request());
+                    RequestParams.ResumeStartPoint resumeStartPoint = requestParams.getResumeStartPoint();
+                    long startPoint = 0L;
+                    if (resumeStartPoint != null) {
+                        String resumeKey = resumeStartPoint.resumeKey;
+                        if (resumeKey != null) {
+                            String startPointStr = originalResponse.header(resumeKey);
+                            startPointStr = startPointStr == null ? "0" : startPointStr;
+                            startPoint = Long.parseLong(startPointStr);
+                        }
+                    }
                     return originalResponse.newBuilder()
-                            .body(new ProgressResponseBody(originalResponse.body(), progressCallback))
+                            .body(new ProgressResponseBody(originalResponse.body(), startPoint, progressCallback))
                             .build();
                 }
             };
@@ -472,16 +503,16 @@ public class HttpManagerImpl implements HttpManager {
     }
 
     /**
-     * 判断重名文件并重命名
+     * 判断重名文件并进行重命名
      *
      * @param file 下载的文件
      * @return 重命名后的文件
      */
-    private File chooseUniqueFilename(File file) {
+    private File chooseUniqueTempFile(File file) {
         Random sRandom = new Random(SystemClock.uptimeMillis());
         String filePath = file.getAbsolutePath();
         if (!file.exists()) {
-            return file;
+            return new File(filePath + SUFFIX_TEMP);
         }
         String filename = filePath.substring(0, filePath.lastIndexOf("."));
         String extension = filePath.substring(filePath.lastIndexOf("."), filePath.length());
@@ -494,12 +525,12 @@ public class HttpManagerImpl implements HttpManager {
                 filePath = filename + sequence + extension;
                 File file1 = new File(filePath);
                 if (!file1.exists()) {
-                    return file1;
+                    return new File(filePath + SUFFIX_TEMP);
                 }
                 sequence += sRandom.nextInt(magnitude) + 1;
             }
         }
-        return file;
+        return new File(filePath + SUFFIX_TEMP);
     }
 
 }

@@ -179,7 +179,8 @@ public class MainActivity extends AppCompatActivity {
     @OnClick(R2.id.btn_download)
     public void onDownloadClick(View view) {
         RequestParams requestParams = new RequestParams(URL_DOWNLOAD);
-        requestParams.setDownloadStartPoint("download", 1111);
+//        requestParams.setDownloadStartPoint("download", 1111);
+        requestParams.setDownloadStartPoint("download", 1111, "download222");
         JH.http().download(requestParams, Environment.getExternalStorageDirectory().getAbsolutePath(), new ProgressCallback() {
             @Override
             public void onStarted() {

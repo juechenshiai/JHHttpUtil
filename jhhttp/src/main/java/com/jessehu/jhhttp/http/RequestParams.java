@@ -142,8 +142,12 @@ public class RequestParams {
         this.downloadStartPoint = downloadStartPoint;
     }
 
-    public void setDownloadStartPoint(String key, long value) {
-        this.downloadStartPoint = new DownloadStartPoint(key, value);
+    public void setDownloadStartPoint(String startPointKey, long startPointValue) {
+        this.downloadStartPoint = new DownloadStartPoint(startPointKey, startPointValue);
+    }
+
+    public void setDownloadStartPoint(String startPointKey, long startPointValue, String responseKey) {
+        this.downloadStartPoint = new DownloadStartPoint(startPointKey, startPointValue, responseKey);
     }
 
     public Map<String, Object> getBodyParams() {
@@ -191,10 +195,16 @@ public class RequestParams {
 
         public String startPointKey;
         public long startPointValue;
+        public String responseStartPointKey;
 
         public DownloadStartPoint(String startPointKey, long startPointValue) {
+            this(startPointKey, startPointValue, null);
+        }
+
+        public DownloadStartPoint(String startPointKey, long startPointValue, String responseStartPointKey) {
             this.startPointKey = startPointKey;
             this.startPointValue = startPointValue;
+            this.responseStartPointKey = responseStartPointKey;
         }
     }
 }

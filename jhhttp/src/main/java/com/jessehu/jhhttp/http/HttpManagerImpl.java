@@ -496,8 +496,12 @@ public class HttpManagerImpl implements HttpManager {
         long startPoint = 0L;
         if (downloadStartPoint != null) {
             String startPointKey = downloadStartPoint.startPointKey;
-            if (startPointKey != null) {
-                String startPointStr = response.header(startPointKey);
+            String responseStartPointKey = downloadStartPoint.responseStartPointKey;
+            if (responseStartPointKey == null) {
+                responseStartPointKey = startPointKey;
+            }
+            if (responseStartPointKey != null) {
+                String startPointStr = response.header(responseStartPointKey);
                 startPointStr = startPointStr == null ? "0" : startPointStr;
                 startPoint = Long.parseLong(startPointStr);
             }

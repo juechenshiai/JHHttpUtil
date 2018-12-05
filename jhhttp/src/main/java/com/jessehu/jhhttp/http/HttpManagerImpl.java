@@ -200,16 +200,7 @@ public class HttpManagerImpl implements HttpManager {
                     name = URLUtil.guessFileName(url, null, mimeType);
                 }
                 File file = new File(path, name);
-                RequestParams.ResumeStartPoint resumeStartPoint = requestParams.getResumeStartPoint();
-                long startPoint = 0L;
-                if (resumeStartPoint != null) {
-                    String resumeKey = resumeStartPoint.resumeKey;
-                    if (resumeKey != null) {
-                        String startPointStr = response.header(resumeKey);
-                        startPointStr = startPointStr == null ? "0" : startPointStr;
-                        startPoint = Long.parseLong(startPointStr);
-                    }
-                }
+                long startPoint = getStartPoint(response, requestParams);
                 saveFile(call, response, chooseUniqueTempFile(file), startPoint, progressCallback);
             }
         });
@@ -368,11 +359,11 @@ public class HttpManagerImpl implements HttpManager {
      * @param requestBuilder Request.Builder
      */
     private void addHeaders(RequestParams requestParams, Request.Builder requestBuilder, int method) {
-        if (method == METHOD_DOWNLOAD && requestParams.getResumeStartPoint() != null) {
-            String resumeKey = requestParams.getResumeStartPoint().resumeKey;
-            if (resumeKey != null) {
-                String resumePoint = requestParams.getResumeStartPoint().resumePoint + "";
-                requestBuilder.addHeader(resumeKey, resumePoint);
+        if (method == METHOD_DOWNLOAD && requestParams.getDownloadStartPoint() != null) {
+            String startPointKey = requestParams.getDownloadStartPoint().startPointKey;
+            if (startPointKey != null) {
+                String startPointValue = requestParams.getDownloadStartPoint().startPointValue + "";
+                requestBuilder.addHeader(startPointKey, startPointValue);
             }
         }
         for (String key : requestParams.getHeaders().keySet()) {
@@ -483,16 +474,7 @@ public class HttpManagerImpl implements HttpManager {
                 @Override
                 public Response intercept(Chain chain) throws IOException {
                     Response originalResponse = chain.proceed(chain.request());
-                    RequestParams.ResumeStartPoint resumeStartPoint = requestParams.getResumeStartPoint();
-                    long startPoint = 0L;
-                    if (resumeStartPoint != null) {
-                        String resumeKey = resumeStartPoint.resumeKey;
-                        if (resumeKey != null) {
-                            String startPointStr = originalResponse.header(resumeKey);
-                            startPointStr = startPointStr == null ? "0" : startPointStr;
-                            startPoint = Long.parseLong(startPointStr);
-                        }
-                    }
+                    long startPoint = getStartPoint(originalResponse, requestParams);
                     return originalResponse.newBuilder()
                             .body(new ProgressResponseBody(originalResponse.body(), startPoint, progressCallback))
                             .build();
@@ -500,6 +482,27 @@ public class HttpManagerImpl implements HttpManager {
             };
             clientBuilder.addInterceptor(interceptor);
         }
+    }
+
+    /**
+     * 获取下载断点(起始点)
+     *
+     * @param response      Response
+     * @param requestParams 请求参数
+     * @return 下载断点
+     */
+    private long getStartPoint(Response response, RequestParams requestParams) {
+        RequestParams.DownloadStartPoint downloadStartPoint = requestParams.getDownloadStartPoint();
+        long startPoint = 0L;
+        if (downloadStartPoint != null) {
+            String startPointKey = downloadStartPoint.startPointKey;
+            if (startPointKey != null) {
+                String startPointStr = response.header(startPointKey);
+                startPointStr = startPointStr == null ? "0" : startPointStr;
+                startPoint = Long.parseLong(startPointStr);
+            }
+        }
+        return startPoint;
     }
 
     /**

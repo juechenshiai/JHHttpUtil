@@ -41,7 +41,7 @@ public class RequestParams {
 
     private Map<String, Object> headers;
     private Map<String, Object> bodyParams;
-    private ResumeStartPoint resumeStartPoint;
+    private DownloadStartPoint downloadStartPoint;
     private boolean asJsonContent = false;
     private String jsonString;
 
@@ -134,18 +134,16 @@ public class RequestParams {
         headers.put(key, value);
     }
 
-    public ResumeStartPoint getResumeStartPoint() {
-        return resumeStartPoint;
+    public DownloadStartPoint getDownloadStartPoint() {
+        return downloadStartPoint;
     }
 
-    public void setResumeStartPoint(ResumeStartPoint resumeStartPoint) {
-        this.resumeStartPoint = resumeStartPoint;
-        headers.put(resumeStartPoint.resumeKey, resumeStartPoint.resumePoint);
+    public void setDownloadStartPoint(DownloadStartPoint downloadStartPoint) {
+        this.downloadStartPoint = downloadStartPoint;
     }
 
-    public void setResumeStartPoint(String key, long value) {
-        this.resumeStartPoint = new ResumeStartPoint(key, value);
-        headers.put(resumeStartPoint.resumeKey, resumeStartPoint.resumePoint);
+    public void setDownloadStartPoint(String key, long value) {
+        this.downloadStartPoint = new DownloadStartPoint(key, value);
     }
 
     public Map<String, Object> getBodyParams() {
@@ -189,14 +187,14 @@ public class RequestParams {
         }
     }
 
-    public static class ResumeStartPoint {
+    public static class DownloadStartPoint {
 
-        public String resumeKey;
-        public long resumePoint;
+        public String startPointKey;
+        public long startPointValue;
 
-        public ResumeStartPoint(String resumeKey, long resumePoint) {
-            this.resumeKey = resumeKey;
-            this.resumePoint = resumePoint;
+        public DownloadStartPoint(String startPointKey, long startPointValue) {
+            this.startPointKey = startPointKey;
+            this.startPointValue = startPointValue;
         }
     }
 }

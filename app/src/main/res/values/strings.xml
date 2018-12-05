@@ -2,4 +2,6 @@
     <string name="app_name">JHHttpUtil</string>
     <string name="str_get">get</string>
     <string name="str_post">post</string>
+    <string name="str_upload">upload</string>
+    <string name="str_download">download</string>
 </resources>

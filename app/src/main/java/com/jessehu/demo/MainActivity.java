@@ -1,14 +1,23 @@
 package com.jessehu.demo;
 
+import android.app.Activity;
 import android.content.Context;
-import android.support.v7.app.AppCompatActivity;
+import android.content.Intent;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
+import android.provider.MediaStore;
+import android.support.annotation.Nullable;
+import android.support.v7.app.AppCompatActivity;
 import android.text.method.ScrollingMovementMethod;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
 import com.jessehu.jhhttp.JH;
+import com.jessehu.jhhttp.http.ProgressCallback;
 import com.jessehu.jhhttp.http.RequestParams;
 
 import java.io.IOException;
@@ -28,13 +37,25 @@ public class MainActivity extends AppCompatActivity {
     Button getBtn;
     @BindView(R2.id.btn_post)
     Button postBtn;
+    @BindView(R2.id.btn_upload)
+    Button uploadBtn;
+    @BindView(R2.id.btn_download)
+    Button downloadBtn;
     @BindView(R2.id.tv_result)
     TextView resultTv;
     private Unbinder unbinder;
-    public static final String URL_GET = "http://wanandroid.com/wxarticle/chapters/json ";
+    private static final String TAG = MainActivity.class.getSimpleName();
+    public static final String URL_GET = "http://wanandroid.com/wxarticle/chapters/json";
+    public static final String URL_GET2 = "http://192.168.1.142:8080/HttpRequest";
     public static final String URL_POST = "http://www.wanandroid.com/user/login";
-    public static final String USERNAME = "yaoyue";
-    public static final String PASSWORD = "jessehu";
+    public static final String URL_POST2 = "http://192.168.1.142:8080/JsonRequest";
+    public static final String URL_UPLOAD = "http://192.168.1.142:8080/Upload";
+    public static final String URL_DOWNLOAD = "http://192.168.1.142:8080/v.apk";
+    public static final String URL_DOWNLOAD2 = "http://openbox.mobilem.360.cn/index/d/sid/3990138";
+    private static final String USERNAME = "123";
+    private static final String PASSWORD = "456";
+    private static final int CODE_UPLOAD_NO_PROGRESS = 123;
+    private static final int CODE_UPLOAD_PROGRESS = 456;
     private Context mContext;
     private String resultStr;
 
@@ -55,22 +76,27 @@ public class MainActivity extends AppCompatActivity {
 
     @OnClick({R2.id.btn_get})
     public void onGetClick(View v) {
-        JH.thread().singleThread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    requestWithResponse(JH.http().get(URL_GET));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
+//        JH.thread().singleThread(new Runnable() {
+//            @Override
+//            public void run() {
+//                try {
+//                    requestWithResponse(JH.http().get(URL_GET2));
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                }
+//            }
+//        });
 
-//        getWithCallback();
+        getWithCallback();
     }
 
     private void getWithCallback() {
-        JH.http().get(URL_GET, new Callback() {
+        RequestParams requestParams = new RequestParams(URL_GET2);
+        requestParams.addBodyParams("username", USERNAME);
+        requestParams.addBodyParams("password", PASSWORD);
+        requestParams.addHeaders("username", USERNAME);
+        requestParams.addHeaders("password", PASSWORD);
+        JH.http().get(requestParams, new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
                 JH.thread().uiThread(new Runnable() {
@@ -113,9 +139,10 @@ public class MainActivity extends AppCompatActivity {
 //            }
 //        });
 
-        RequestParams requestParams = new RequestParams(URL_POST);
+        RequestParams requestParams = new RequestParams(URL_POST2);
         requestParams.addBodyParams("username", USERNAME);
         requestParams.addBodyParams("password", PASSWORD);
+        requestParams.setAsJsonContent(true);
         JH.http().post(requestParams, new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
@@ -140,6 +167,48 @@ public class MainActivity extends AppCompatActivity {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+            }
+        });
+    }
+
+    @OnClick(R2.id.btn_upload)
+    public void onUploadClick(View view) {
+        uploadWithNoProgress();
+    }
+
+    @OnClick(R2.id.btn_download)
+    public void onDownloadClick(View view) {
+        RequestParams requestParams = new RequestParams(URL_DOWNLOAD);
+        requestParams.setDownloadStartPoint("download", 1111);
+        JH.http().download(requestParams, Environment.getExternalStorageDirectory().getAbsolutePath(), new ProgressCallback() {
+            @Override
+            public void onStarted() {
+
+            }
+
+            @Override
+            public void onProgress(long totalLength, long bytesWritten, float percent) {
+                JH.thread().uiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        resultTv.setText(percent + "");
+                    }
+                });
+            }
+
+            @Override
+            public void onFinished() {
+
+            }
+
+            @Override
+            public void onFailure(Call call, IOException e) {
+
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+
             }
         });
     }
@@ -201,5 +270,136 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+    }
+
+    private void uploadWithNoProgress() {
+        Intent intent = new Intent();
+        intent.setAction(Intent.ACTION_GET_CONTENT);
+        intent.setType("*/*");
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        startActivityForResult(intent, CODE_UPLOAD_PROGRESS);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (data != null && resultCode == Activity.RESULT_OK) {
+            Uri uri = data.getData();
+            String path = getRealPathFromURI(this, uri);
+            if (CODE_UPLOAD_NO_PROGRESS == requestCode) {
+                try {
+                    uploadWithNoProgress(path);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+            } else if (CODE_UPLOAD_PROGRESS == requestCode) {
+                try {
+                    uploadWithProgress(path);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+    }
+
+    private void uploadWithProgress(String path) throws IOException {
+        RequestParams requestParams = new RequestParams(URL_UPLOAD);
+        requestParams.addFile("file", path);
+        requestParams.addBodyParams("token", "123");
+        JH.http().upload(requestParams, new ProgressCallback() {
+            @Override
+            public void onStarted() {
+
+            }
+
+            @Override
+            public void onProgress(long totalLength, long bytesWritten, float percent) {
+                JH.thread().uiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        resultTv.setText(percent + "");
+                    }
+                });
+            }
+
+            @Override
+            public void onFinished() {
+
+            }
+
+            @Override
+            public void onFailure(Call call, IOException e) {
+                Log.e(TAG, "onFailure: ", e);
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                resultStr = response.body() == null ? "body is null" : response.body().string();
+                JH.thread().uiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        resultTv.setText(resultStr);
+                    }
+                });
+            }
+        });
+    }
+
+    private void uploadWithNoProgress(String path) throws IOException {
+        //                JH.http().upload(URL_UPLOAD, "file", path, new Callback() {
+//                    @Override
+//                    public void onFailure(Call call, IOException e) {
+//                        Log.e(TAG, "onFailure: ", e);
+//                    }
+//
+//                    @Override
+//                    public void onResponse(Call call, Response response) throws IOException {
+//                        resultStr = response.body() == null ? "body is null" : response.body().string();
+//                        JH.thread().uiThread(new Runnable() {
+//                            @Override
+//                            public void run() {
+//                                resultTv.setText(resultStr);
+//                            }
+//                        });
+//                    }
+//                });
+        RequestParams requestParams = new RequestParams(URL_UPLOAD);
+        requestParams.addFile("file", path);
+        requestParams.addBodyParams("token", "123");
+        JH.http().upload(requestParams, new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                Log.e(TAG, "onFailure: ", e);
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                resultStr = response.body() == null ? "body is null" : response.body().string();
+                JH.thread().uiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        resultTv.setText(resultStr);
+                    }
+                });
+            }
+        });
+    }
+
+    private String getRealPathFromURI(Context context, Uri contentURI) {
+        String result;
+        Cursor cursor = context.getContentResolver().query(contentURI,
+                new String[]{MediaStore.Images.ImageColumns.DATA},
+                null, null, null);
+        if (cursor == null) {
+            result = contentURI.getPath();
+        } else {
+            cursor.moveToFirst();
+            int index = cursor.getColumnIndex(MediaStore.Images.ImageColumns.DATA);
+            result = cursor.getString(index);
+            cursor.close();
+        }
+        return result;
     }
 }

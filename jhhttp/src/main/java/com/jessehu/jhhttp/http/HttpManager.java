@@ -44,7 +44,7 @@ public interface HttpManager {
      * @return OkHttp {@link Response}
      * @throws IOException IO异常
      */
-    Response get(String url) throws IOException;
+    Response getSync(String url) throws IOException;
 
     /**
      * GET同步请求<br/>
@@ -55,7 +55,7 @@ public interface HttpManager {
      * @return OkHttp {@link Response}
      * @throws IOException IO异常
      */
-    Response get(RequestParams requestParams) throws IOException;
+    Response getSync(RequestParams requestParams) throws IOException;
 
     /**
      * POST请求<br/>
@@ -86,7 +86,7 @@ public interface HttpManager {
      * @return OkHttp {@link Response}
      * @throws IOException IO异常
      */
-    Response post(String url) throws IOException;
+    Response postSync(String url) throws IOException;
 
     /**
      * POST请求<br/>
@@ -97,7 +97,7 @@ public interface HttpManager {
      * @return OkHttp {@link Response}
      * @throws IOException IO异常
      */
-    Response post(RequestParams requestParams) throws IOException;
+    Response postSync(RequestParams requestParams) throws IOException;
 
     /**
      * 文件上传<br/>

@@ -80,13 +80,13 @@ public class HttpManagerImpl implements HttpManager {
     }
 
     @Override
-    public Response get(String url) throws IOException {
+    public Response getSync(String url) throws IOException {
         RequestParams requestParams = new RequestParams(url);
-        return get(requestParams);
+        return getSync(requestParams);
     }
 
     @Override
-    public Response get(RequestParams requestParams) throws IOException {
+    public Response getSync(RequestParams requestParams) throws IOException {
         Call call = getRequestCall(requestParams, METHOD_GET, null);
         return call.execute();
     }
@@ -104,13 +104,13 @@ public class HttpManagerImpl implements HttpManager {
     }
 
     @Override
-    public Response post(String url) throws IOException {
+    public Response postSync(String url) throws IOException {
         RequestParams requestParams = new RequestParams(url);
-        return post(requestParams);
+        return postSync(requestParams);
     }
 
     @Override
-    public Response post(RequestParams requestParams) throws IOException {
+    public Response postSync(RequestParams requestParams) throws IOException {
         Call call = getRequestCall(requestParams, METHOD_POST, null);
         return call.execute();
     }

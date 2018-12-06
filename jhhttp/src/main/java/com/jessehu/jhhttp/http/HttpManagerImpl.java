@@ -122,67 +122,59 @@ public class HttpManagerImpl implements HttpManager {
 
     @Override
     public void upload(RequestParams requestParams, Callback callback) {
-        Call call = getRequestCall(requestParams, METHOD_UPLOAD, null);
+        ProgressCallback progressCallback = null;
+        if (callback instanceof ProgressCallback) {
+            progressCallback = (ProgressCallback) callback;
+        }
+        Call call = getRequestCall(requestParams, METHOD_UPLOAD, progressCallback);
         call.enqueue(callback);
     }
 
     @Override
-    public void upload(String url, String key, String filePath, ProgressCallback progressCallback) {
+    public void download(String url, Callback callback) {
         RequestParams requestParams = new RequestParams(url);
-        requestParams.addFile(key, filePath);
-        upload(requestParams, progressCallback);
+        download(requestParams, callback);
     }
 
     @Override
-    public void upload(RequestParams requestParams, @NonNull ProgressCallback progressCallback) {
-        progressCallback.onStarted();
-        Call call = getRequestCall(requestParams, METHOD_UPLOAD, progressCallback);
-        call.enqueue(progressCallback);
-    }
-
-    @Override
-    public void download(String url, boolean autoDownload, ProgressCallback progressCallback) {
-        RequestParams requestParams = new RequestParams(url);
-        download(requestParams, autoDownload, progressCallback);
-    }
-
-    @Override
-    public void download(RequestParams requestParams, boolean autoDownload, ProgressCallback progressCallback) {
-        if (autoDownload) {
-            download(requestParams, null, null, progressCallback);
-        } else {
+    public void download(RequestParams requestParams, Callback callback) {
+        if (callback instanceof ProgressCallback) {
+            ProgressCallback progressCallback = (ProgressCallback) callback;
             progressCallback.onStarted();
-            Call call = getRequestCall(requestParams, METHOD_DOWNLOAD, progressCallback);
-            call.enqueue(progressCallback);
-        }
-    }
-
-    @Override
-    public void download(String url, String filePath, ProgressCallback progressCallback) {
-        RequestParams requestParams = new RequestParams(url);
-        download(requestParams, filePath, progressCallback);
-    }
-
-    @Override
-    public void download(RequestParams requestParams, String filePath, ProgressCallback progressCallback) {
-        File file = new File(filePath);
-        if (file.isDirectory()) {
-            download(requestParams, filePath, null, progressCallback);
+            downloadFile(requestParams, progressCallback);
         } else {
-            download(requestParams, file.getParent(), file.getName(), progressCallback);
+            Call call = getRequestCall(requestParams, METHOD_DOWNLOAD, null);
+            call.enqueue(callback);
         }
     }
 
-    @Override
-    public void download(String url, String filePath, String fileName, ProgressCallback progressCallback) {
-        RequestParams requestParams = new RequestParams(url);
-        download(requestParams, filePath, fileName, progressCallback);
-    }
-
-    @Override
-    public void download(final RequestParams requestParams, final String filePath, final String fileName, final ProgressCallback progressCallback) {
-        progressCallback.onStarted();
+    /**
+     * 下载
+     *
+     * @param requestParams    请求参数
+     * @param progressCallback 请求回调
+     */
+    private void downloadFile(final RequestParams requestParams, final ProgressCallback progressCallback) {
+        String filename = requestParams.getDownloadFilename();
+        String filePath = requestParams.getDownloadPath();
+        if (filePath != null) {
+            File file = new File(filePath);
+            // 路径不为null的情况下，如果路径是文件则判断是否有两个文件名并判断文件名是否相等
+            if (!file.isDirectory()) {
+                filePath = file.getParent();
+                String filename2 = file.getName();
+                if (filename != null && !filename2.equals(filename)) {
+                    throw new RuntimeException("There are two different filenames");
+                } else {
+                    filename = filename2;
+                }
+            }
+        } else {
+            filePath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath();
+        }
         Call call = getRequestCall(requestParams, METHOD_DOWNLOAD, progressCallback);
+        final String finalFilePath = filePath;
+        final String finalFilename = filename;
         call.enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
@@ -192,21 +184,19 @@ public class HttpManagerImpl implements HttpManager {
             @Override
             public void onResponse(Call call, Response response) throws IOException {
                 progressCallback.onResponse(call, response);
-                String path = filePath;
-                if (path == null) {
-                    path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath();
-                }
-                String name = fileName;
+                String name = finalFilename;
                 if (name == null) {
+                    // 获取连接中的文件名，response中可以获取到真实直链，request只能获取重定向之前的链接，如果不是直链将无法获取直链
                     String url = response.request().url().toString();
                     String mimeType = MimeTypeMap.getFileExtensionFromUrl(url);
                     name = URLUtil.guessFileName(url, null, mimeType);
                 }
-                File file = new File(path, name);
+                File file = new File(finalFilePath, name);
                 long startPoint = getStartPoint(response, requestParams);
                 saveFile(call, response, chooseUniqueTempFile(file), startPoint, progressCallback);
             }
         });
+
     }
 
     /**

@@ -44,6 +44,8 @@ public class RequestParams {
     private DownloadStartPoint downloadStartPoint;
     private boolean asJsonContent = false;
     private String jsonString;
+    private String downloadPath;
+    private String downloadFilename;
 
     public RequestParams() {
         headers = new HashMap<>();
@@ -176,6 +178,27 @@ public class RequestParams {
 
     public void addBodyParams(String key, Object value) {
         bodyParams.put(key, value);
+    }
+
+    public String getDownloadPath() {
+        return downloadPath;
+    }
+
+    public void setDownloadPath(String downloadPath) {
+        this.downloadPath = downloadPath;
+    }
+
+    public String getDownloadFilename() {
+        return downloadFilename;
+    }
+
+    public void setDownloadFilename(String downloadFilename) {
+        this.downloadFilename = downloadFilename;
+    }
+
+    public void setDowload(String filePath, String filename) {
+        this.downloadPath = filePath;
+        this.downloadFilename = filename;
     }
 
     public void addFile(String key, String filePath) {

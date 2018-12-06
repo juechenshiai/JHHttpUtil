@@ -195,7 +195,9 @@ public class HttpManagerImpl implements HttpManager {
                 }
                 File file = new File(finalFilePath, name);
                 long startPoint = getStartPoint(response, requestParams);
-                saveFile(call, response, chooseUniqueTempFile(file), startPoint, progressCallback);
+                boolean downloadCover = requestParams.getDownloadParams().isDownloadCover();
+                boolean downloadTempCover = requestParams.getDownloadParams().isDownloadTempCover();
+                saveFile(call, response, chooseUniqueTempFile(file, downloadCover, downloadTempCover), startPoint, progressCallback);
             }
         });
 
@@ -505,27 +507,37 @@ public class HttpManagerImpl implements HttpManager {
     }
 
     /**
-     * 判断重名文件并进行重命名
+     * 判断重名文件并进行重命名<br/>
+     * downloadCover优先级 > downloadTempCover,如果downloadCover==true downloadTempCover将不会起作用
      *
-     * @param file 下载的文件
+     * @param downloadCover     是否覆盖已存在的重名文件
+     * @param downloadTempCover 是否覆盖已存在的重名缓存文件
+     * @param file              下载的文件
      * @return 重命名后的文件
      */
-    private File chooseUniqueTempFile(File file) {
+    private File chooseUniqueTempFile(File file, boolean downloadCover, boolean downloadTempCover) {
         String filePath = file.getAbsolutePath();
-        if (!file.exists()) {
+        if (!file.exists() || downloadCover) {
             return new File(filePath + SUFFIX_TEMP);
         }
         String filename = filePath.substring(0, filePath.lastIndexOf("."));
         String extension = filePath.substring(filePath.lastIndexOf("."), filePath.length());
-
         filename = filename + FILENAME_SEQUENCE_SEPARATOR;
 
         for (int sequence = 1; sequence < Integer.MAX_VALUE; sequence++) {
             filePath = filename + sequence + extension;
             File file1 = new File(filePath);
-            if (!file1.exists()) {
-                return new File(filePath + SUFFIX_TEMP);
+            if (downloadTempCover) {
+                if (!file1.exists()) {
+                    return new File(filePath + SUFFIX_TEMP);
+                }
+            } else {
+                File tempFile = new File(filePath + SUFFIX_TEMP);
+                if (!file1.exists() && !tempFile.exists()) {
+                    return tempFile;
+                }
             }
+
         }
         return new File(filePath + SUFFIX_TEMP);
     }

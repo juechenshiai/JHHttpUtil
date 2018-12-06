@@ -176,6 +176,20 @@ public class RequestParams {
         }
     }
 
+    public void setDownloadCover(boolean downloadCover) {
+        if (downloadParams == null) {
+            downloadParams = new DownloadParams();
+        }
+        downloadParams.setDownloadCover(downloadCover);
+    }
+
+    public void setDownloadTempCover(boolean downloadTempCover) {
+        if (downloadParams == null) {
+            downloadParams = new DownloadParams();
+        }
+        downloadParams.setDownloadTempCover(downloadTempCover);
+    }
+
     public Map<String, Object> getBodyParams() {
         return bodyParams;
     }

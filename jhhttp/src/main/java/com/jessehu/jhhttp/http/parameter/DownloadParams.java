@@ -13,6 +13,8 @@ public class DownloadParams {
     private String responseStartPointKey;
     private String downloadPath;
     private String downloadFilename;
+    private boolean downloadCover = false;
+    private boolean downloadTempCover = false;
 
     public DownloadParams() {
     }
@@ -98,5 +100,21 @@ public class DownloadParams {
 
     public void setDownloadFilename(String downloadFilename) {
         this.downloadFilename = downloadFilename;
+    }
+
+    public boolean isDownloadCover() {
+        return downloadCover;
+    }
+
+    public void setDownloadCover(boolean downloadCover) {
+        this.downloadCover = downloadCover;
+    }
+
+    public boolean isDownloadTempCover() {
+        return downloadTempCover;
+    }
+
+    public void setDownloadTempCover(boolean downloadTempCover) {
+        this.downloadTempCover = downloadTempCover;
     }
 }

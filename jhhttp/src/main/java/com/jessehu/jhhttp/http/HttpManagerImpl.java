@@ -511,7 +511,6 @@ public class HttpManagerImpl implements HttpManager {
      * @return 重命名后的文件
      */
     private File chooseUniqueTempFile(File file) {
-        Random sRandom = new Random(SystemClock.uptimeMillis());
         String filePath = file.getAbsolutePath();
         if (!file.exists()) {
             return new File(filePath + SUFFIX_TEMP);
@@ -521,15 +520,11 @@ public class HttpManagerImpl implements HttpManager {
 
         filename = filename + FILENAME_SEQUENCE_SEPARATOR;
 
-        int sequence = 1;
-        for (int magnitude = 1; magnitude < Integer.MAX_VALUE; magnitude *= 10) {
-            for (int iteration = 0; iteration < 9; ++iteration) {
-                filePath = filename + sequence + extension;
-                File file1 = new File(filePath);
-                if (!file1.exists()) {
-                    return new File(filePath + SUFFIX_TEMP);
-                }
-                sequence += sRandom.nextInt(magnitude) + 1;
+        for (int sequence = 1; sequence < Integer.MAX_VALUE; sequence++) {
+            filePath = filename + sequence + extension;
+            File file1 = new File(filePath);
+            if (!file1.exists()) {
+                return new File(filePath + SUFFIX_TEMP);
             }
         }
         return new File(filePath + SUFFIX_TEMP);

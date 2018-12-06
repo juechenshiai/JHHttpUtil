@@ -9,7 +9,7 @@ import okhttp3.Callback;
 import okhttp3.Response;
 
 /**
- * HttpManager
+ * HTTP请求接口
  *
  * @author JesseHu
  * @date 2018/11/28

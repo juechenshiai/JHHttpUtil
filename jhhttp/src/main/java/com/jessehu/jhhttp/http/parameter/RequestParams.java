@@ -11,7 +11,8 @@ import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.X509TrustManager;
 
 /**
- * RequestParams
+ * 请求参数<br/>
+ * 包括请求头、请求参数、上传参数、下载参数
  *
  * @author JesseHu
  * @date 2018/11/29
@@ -41,10 +42,25 @@ public class RequestParams {
      */
     private int writeTimeout = 1000 * 15;
 
+    /**
+     * 请求头
+     */
     private Map<String, Object> headers;
+    /**
+     * 请求参数，如果asJsonContent==true将会转换为Json String
+     */
     private Map<String, Object> bodyParams;
+    /**
+     * 下载参数
+     */
     private DownloadParams downloadParams;
+    /**
+     * post json请求
+     */
     private boolean asJsonContent = false;
+    /**
+     * 自定义json数据，适合于bodyParams无法满足的json格式
+     */
     private String jsonString;
 
     public RequestParams() {
@@ -62,6 +78,12 @@ public class RequestParams {
         setHttpsCert(host, cert);
     }
 
+    /**
+     * 设置https证书
+     *
+     * @param host
+     * @param cert
+     */
     public void setHttpsCert(String host, String cert) {
         sslSocketFactory = CertManager.getSocketFactory(cert);
         x509TrustManager = CertManager.getX509TrustManager(cert);
@@ -128,10 +150,21 @@ public class RequestParams {
         return headers;
     }
 
+    /**
+     * 设置请求头
+     *
+     * @param headers 请求头
+     */
     public void setHeaders(Map<String, Object> headers) {
         this.headers = headers;
     }
 
+    /**
+     * 添加单个请求头
+     *
+     * @param key   请求头key
+     * @param value 请求头value
+     */
     public void addHeaders(String key, Object value) {
         headers.put(key, value);
     }
@@ -140,10 +173,21 @@ public class RequestParams {
         return downloadParams;
     }
 
+    /**
+     * 设置下载相关参数
+     *
+     * @param downloadParams 下载参数
+     */
     public void setDownloadParams(DownloadParams downloadParams) {
         this.downloadParams = downloadParams;
     }
 
+    /**
+     * 设置下载断点(起始点)
+     *
+     * @param startPointKey   断点请求头key
+     * @param startPointValue 断点请求头value，需要下载的起始点
+     */
     public void setDownloadStartPoint(String startPointKey, long startPointValue) {
         if (downloadParams == null) {
             this.downloadParams = new DownloadParams(startPointKey, startPointValue);
@@ -152,6 +196,13 @@ public class RequestParams {
         }
     }
 
+    /**
+     * 设置下载断点(起始点)
+     *
+     * @param startPointKey   断点请求头key
+     * @param startPointValue 断点请求头value，需要下载的起始点
+     * @param responseKey     断点响应头key，用户获取服务器返回的起始点
+     */
     public void setDownloadStartPoint(String startPointKey, long startPointValue, String responseKey) {
         if (downloadParams == null) {
             this.downloadParams = new DownloadParams(startPointKey, startPointValue, responseKey);
@@ -160,6 +211,13 @@ public class RequestParams {
         }
     }
 
+    /**
+     * 设置下载文件的路径<br/>
+     * 如果是完整文件路径，文件名将以路径中的文件名为准<br/>
+     * 如果是文件的存储文件夹，文件名则为远端文件名
+     *
+     * @param downloadPath 保存路径
+     */
     public void setDownloadFile(String downloadPath) {
         if (downloadParams == null) {
             this.downloadParams = new DownloadParams(downloadPath);
@@ -168,6 +226,16 @@ public class RequestParams {
         }
     }
 
+    /**
+     * 设置下载文件路径<br/>
+     * 如果路径为完整文件路径，则会判断文件名是否一致<br/>
+     * 如果文件名不为null且不一样将会报错,如果文件名为null则以路径中的文件名为准<br/>
+     * 如果文件路径为null则保存到Download文件夹中<br/>
+     * 如果文件路径与名称都为null，将会保存到Download文件夹中，文件名为远端文件名
+     *
+     * @param downloadPath     文件保存路径
+     * @param downloadFilename 文件保存名称
+     */
     public void setDownloadFile(String downloadPath, String downloadFilename) {
         if (downloadParams == null) {
             this.downloadParams = new DownloadParams(downloadPath, downloadFilename);
@@ -176,6 +244,12 @@ public class RequestParams {
         }
     }
 
+    /**
+     * 是否覆盖重名文件<br/>
+     * 如果为true，downloadTempCover也将为true,此时如果文件和缓存文件都存在的情况下两个文件都将被覆盖
+     *
+     * @param downloadCover true:覆盖 false:重命名后新建一个文件
+     */
     public void setDownloadCover(boolean downloadCover) {
         if (downloadParams == null) {
             downloadParams = new DownloadParams();
@@ -183,6 +257,12 @@ public class RequestParams {
         downloadParams.setDownloadCover(downloadCover);
     }
 
+    /**
+     * 是否覆盖缓存文件<br/>
+     * 只有downloadCover==false时有效，如果设为true，此时只会覆盖对应文件不存在的缓存文件，如果缓存文件对应的文件存在则不会覆盖
+     *
+     * @param downloadTempCover true:覆盖 false:新建一个缓存文件
+     */
     public void setDownloadTempCover(boolean downloadTempCover) {
         if (downloadParams == null) {
             downloadParams = new DownloadParams();
@@ -194,10 +274,36 @@ public class RequestParams {
         return bodyParams;
     }
 
+    /**
+     * 设置请求参数
+     *
+     * @param bodyParams 请求参数
+     */
+    public void setBodyParams(Map<String, Object> bodyParams) {
+        this.bodyParams = bodyParams;
+    }
+
+    /**
+     * 添加单个参数
+     *
+     * @param key   参数key
+     * @param value 参数value
+     */
+    public void addBodyParams(String key, Object value) {
+        bodyParams.put(key, value);
+    }
+
     public boolean isAsJsonContent() {
         return asJsonContent;
     }
 
+    /**
+     * 是否使用json提交<br/>
+     * 如果json string为null则bodyParams将转换为json string<br/>
+     * 如果json string不为null则直接提交json string，不转换bodyParams
+     *
+     * @param asJsonContent true:使用json提交参数 false:使用表单提交参数
+     */
     public void setAsJsonContent(boolean asJsonContent) {
         this.asJsonContent = asJsonContent;
     }
@@ -206,23 +312,32 @@ public class RequestParams {
         return jsonString;
     }
 
+    /**
+     * 设置json string
+     *
+     * @param jsonString json string
+     */
     public void setJsonString(String jsonString) {
         this.jsonString = jsonString;
     }
 
-    public void setBodyParams(Map<String, Object> bodyParams) {
-        this.bodyParams = bodyParams;
-    }
-
-    public void addBodyParams(String key, Object value) {
-        bodyParams.put(key, value);
-    }
-
+    /**
+     * 添加上传文件
+     *
+     * @param key      上传参数key
+     * @param filePath 上传文件的路径
+     */
     public void addFile(String key, String filePath) {
         File file = new File(filePath);
         addFile(key, file);
     }
 
+    /**
+     * 添加上传文件
+     *
+     * @param key  上传参数key
+     * @param file 上传的文件
+     */
     public void addFile(String key, File file) {
         if (file.exists()) {
             bodyParams.put(key, file);

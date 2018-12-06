@@ -3,7 +3,7 @@ package com.jessehu.jhhttp.http.callback;
 import okhttp3.Callback;
 
 /**
- * ProgressCallback
+ * 进度回调
  *
  * @author JesseHu
  * @date 2018/11/30

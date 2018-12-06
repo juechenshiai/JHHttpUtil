@@ -6,7 +6,7 @@ import com.jessehu.jhhttp.thread.ThreadPoolManager;
 import com.jessehu.jhhttp.thread.ThreadPoolManagerImpl;
 
 /**
- * JH
+ * library入口
  *
  * @author JesseHu
  * @date 2018/11/28

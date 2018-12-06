@@ -1,7 +1,6 @@
 package com.jessehu.jhhttp.http;
 
 import android.os.Environment;
-import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.webkit.MimeTypeMap;
 import android.webkit.URLUtil;
@@ -21,7 +20,6 @@ import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.net.FileNameMap;
 import java.net.URLConnection;
-import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.HostnameVerifier;
@@ -41,7 +39,7 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 
 /**
- * HttpManagerImpl
+ * HTTP请求实现
  *
  * @author JesseHu
  * @date 2018/11/28
@@ -508,7 +506,9 @@ public class HttpManagerImpl implements HttpManager {
 
     /**
      * 判断重名文件并进行重命名<br/>
-     * downloadCover优先级 > downloadTempCover,如果downloadCover==true downloadTempCover将不会起作用
+     * downloadCover优先级 > downloadTempCover<br/>
+     * 如果downloadCover==true则downloadTempCover==true此时如果文件和缓存文件都存在的情况下两个文件都将被覆盖<br/>
+     * 如果downloadCover==false且downloadTempCover==true此时只会覆盖对应文件不存在的缓存文件，如果缓存文件对应的文件存在则不会覆盖
      *
      * @param downloadCover     是否覆盖已存在的重名文件
      * @param downloadTempCover 是否覆盖已存在的重名缓存文件

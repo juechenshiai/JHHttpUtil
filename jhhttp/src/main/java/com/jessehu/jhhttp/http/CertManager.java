@@ -26,7 +26,7 @@ import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
 
 /**
- * CertManager
+ * HTTPS证书工具
  *
  * @author JesseHu
  * @date 2018/11/29

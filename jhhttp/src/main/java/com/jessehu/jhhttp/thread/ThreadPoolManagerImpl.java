@@ -13,7 +13,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 /**
- * ThreadPoolManagerImpl
+ * 线程实现
  *
  * @author JesseHu
  * @date 2018/8/16

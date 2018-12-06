@@ -1,7 +1,7 @@
 package com.jessehu.jhhttp.thread;
 
 /**
- * ThreadPoolManager
+ * 线程接口
  *
  * @author JesseHu
  * @date 2018/11/28

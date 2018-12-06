@@ -9,6 +9,8 @@ import android.webkit.URLUtil;
 import com.alibaba.fastjson.JSON;
 import com.jessehu.jhhttp.JH;
 import com.jessehu.jhhttp.http.callback.ProgressCallback;
+import com.jessehu.jhhttp.http.parameter.DownloadParams;
+import com.jessehu.jhhttp.http.parameter.RequestParams;
 import com.jessehu.jhhttp.http.progress.ProgressRequestBody;
 import com.jessehu.jhhttp.http.progress.ProgressResponseBody;
 
@@ -155,8 +157,8 @@ public class HttpManagerImpl implements HttpManager {
      * @param progressCallback 请求回调
      */
     private void downloadFile(final RequestParams requestParams, final ProgressCallback progressCallback) {
-        String filename = requestParams.getDownloadFilename();
-        String filePath = requestParams.getDownloadPath();
+        String filePath = requestParams.getDownloadParams().getDownloadPath();
+        String filename = requestParams.getDownloadParams().getDownloadFilename();
         if (filePath != null) {
             File file = new File(filePath);
             // 路径不为null的情况下，如果路径是文件则判断是否有两个文件名并判断文件名是否相等
@@ -352,10 +354,10 @@ public class HttpManagerImpl implements HttpManager {
      * @param requestBuilder Request.Builder
      */
     private void addHeaders(RequestParams requestParams, Request.Builder requestBuilder, int method) {
-        if (method == METHOD_DOWNLOAD && requestParams.getDownloadStartPoint() != null) {
-            String startPointKey = requestParams.getDownloadStartPoint().startPointKey;
+        if (method == METHOD_DOWNLOAD && requestParams.getDownloadParams() != null) {
+            String startPointKey = requestParams.getDownloadParams().getStartPointKey();
             if (startPointKey != null) {
-                String startPointValue = requestParams.getDownloadStartPoint().startPointValue + "";
+                String startPointValue = requestParams.getDownloadParams().getStartPointValue() + "";
                 requestBuilder.addHeader(startPointKey, startPointValue);
             }
         }
@@ -485,11 +487,11 @@ public class HttpManagerImpl implements HttpManager {
      * @return 下载断点
      */
     private long getStartPoint(Response response, RequestParams requestParams) {
-        RequestParams.DownloadStartPoint downloadStartPoint = requestParams.getDownloadStartPoint();
+        DownloadParams downloadParams = requestParams.getDownloadParams();
         long startPoint = 0L;
-        if (downloadStartPoint != null) {
-            String startPointKey = downloadStartPoint.startPointKey;
-            String responseStartPointKey = downloadStartPoint.responseStartPointKey;
+        if (downloadParams != null) {
+            String startPointKey = downloadParams.getStartPointKey();
+            String responseStartPointKey = downloadParams.getResponseStartPointKey();
             if (responseStartPointKey == null) {
                 responseStartPointKey = startPointKey;
             }

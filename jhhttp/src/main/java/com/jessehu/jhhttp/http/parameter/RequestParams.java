@@ -1,4 +1,6 @@
-package com.jessehu.jhhttp.http;
+package com.jessehu.jhhttp.http.parameter;
+
+import com.jessehu.jhhttp.http.CertManager;
 
 import java.io.File;
 import java.util.HashMap;
@@ -41,11 +43,9 @@ public class RequestParams {
 
     private Map<String, Object> headers;
     private Map<String, Object> bodyParams;
-    private DownloadStartPoint downloadStartPoint;
+    private DownloadParams downloadParams;
     private boolean asJsonContent = false;
     private String jsonString;
-    private String downloadPath;
-    private String downloadFilename;
 
     public RequestParams() {
         headers = new HashMap<>();
@@ -136,20 +136,44 @@ public class RequestParams {
         headers.put(key, value);
     }
 
-    public DownloadStartPoint getDownloadStartPoint() {
-        return downloadStartPoint;
+    public DownloadParams getDownloadParams() {
+        return downloadParams;
     }
 
-    public void setDownloadStartPoint(DownloadStartPoint downloadStartPoint) {
-        this.downloadStartPoint = downloadStartPoint;
+    public void setDownloadParams(DownloadParams downloadParams) {
+        this.downloadParams = downloadParams;
     }
 
     public void setDownloadStartPoint(String startPointKey, long startPointValue) {
-        this.downloadStartPoint = new DownloadStartPoint(startPointKey, startPointValue);
+        if (downloadParams == null) {
+            this.downloadParams = new DownloadParams(startPointKey, startPointValue);
+        } else {
+            this.downloadParams.setDownloadStartPoint(startPointKey, startPointValue);
+        }
     }
 
     public void setDownloadStartPoint(String startPointKey, long startPointValue, String responseKey) {
-        this.downloadStartPoint = new DownloadStartPoint(startPointKey, startPointValue, responseKey);
+        if (downloadParams == null) {
+            this.downloadParams = new DownloadParams(startPointKey, startPointValue, responseKey);
+        } else {
+            this.downloadParams.setDownloadStartPoint(startPointKey, startPointValue, responseKey);
+        }
+    }
+
+    public void setDownloadFile(String downloadPath) {
+        if (downloadParams == null) {
+            this.downloadParams = new DownloadParams(downloadPath);
+        } else {
+            this.downloadParams.setDownloadPath(downloadPath);
+        }
+    }
+
+    public void setDownloadFile(String downloadPath, String downloadFilename) {
+        if (downloadParams == null) {
+            this.downloadParams = new DownloadParams(downloadPath, downloadFilename);
+        } else {
+            this.downloadParams.setDownloadFile(downloadPath, downloadFilename);
+        }
     }
 
     public Map<String, Object> getBodyParams() {
@@ -180,27 +204,6 @@ public class RequestParams {
         bodyParams.put(key, value);
     }
 
-    public String getDownloadPath() {
-        return downloadPath;
-    }
-
-    public void setDownloadPath(String downloadPath) {
-        this.downloadPath = downloadPath;
-    }
-
-    public String getDownloadFilename() {
-        return downloadFilename;
-    }
-
-    public void setDownloadFilename(String downloadFilename) {
-        this.downloadFilename = downloadFilename;
-    }
-
-    public void setDowload(String filePath, String filename) {
-        this.downloadPath = filePath;
-        this.downloadFilename = filename;
-    }
-
     public void addFile(String key, String filePath) {
         File file = new File(filePath);
         addFile(key, file);
@@ -214,20 +217,5 @@ public class RequestParams {
         }
     }
 
-    public static class DownloadStartPoint {
 
-        public String startPointKey;
-        public long startPointValue;
-        public String responseStartPointKey;
-
-        public DownloadStartPoint(String startPointKey, long startPointValue) {
-            this(startPointKey, startPointValue, null);
-        }
-
-        public DownloadStartPoint(String startPointKey, long startPointValue, String responseStartPointKey) {
-            this.startPointKey = startPointKey;
-            this.startPointValue = startPointValue;
-            this.responseStartPointKey = responseStartPointKey;
-        }
-    }
 }

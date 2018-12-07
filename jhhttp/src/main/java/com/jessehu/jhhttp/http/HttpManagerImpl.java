@@ -184,18 +184,20 @@ public class HttpManagerImpl implements HttpManager {
             @Override
             public void onResponse(Call call, Response response) throws IOException {
                 progressCallback.onResponse(call, response);
-                String name = finalFilename;
-                if (name == null) {
-                    // 获取连接中的文件名，response中可以获取到真实直链，request只能获取重定向之前的链接，如果不是直链将无法获取直链
-                    String url = response.request().url().toString();
-                    String mimeType = MimeTypeMap.getFileExtensionFromUrl(url);
-                    name = URLUtil.guessFileName(url, null, mimeType);
+                if (requestParams.getDownloadParams().isDownloadAuto()) {
+                    String name = finalFilename;
+                    if (name == null) {
+                        // 获取连接中的文件名，response中可以获取到真实直链，request只能获取重定向之前的链接，如果不是直链将无法获取直链
+                        String url = response.request().url().toString();
+                        String mimeType = MimeTypeMap.getFileExtensionFromUrl(url);
+                        name = URLUtil.guessFileName(url, null, mimeType);
+                    }
+                    File file = new File(finalFilePath, name);
+                    long startPoint = getStartPoint(response, requestParams);
+                    boolean downloadCover = requestParams.getDownloadParams().isDownloadCover();
+                    boolean downloadTempCover = requestParams.getDownloadParams().isDownloadTempCover();
+                    saveFile(call, response, chooseUniqueTempFile(file, downloadCover, downloadTempCover), startPoint, progressCallback);
                 }
-                File file = new File(finalFilePath, name);
-                long startPoint = getStartPoint(response, requestParams);
-                boolean downloadCover = requestParams.getDownloadParams().isDownloadCover();
-                boolean downloadTempCover = requestParams.getDownloadParams().isDownloadTempCover();
-                saveFile(call, response, chooseUniqueTempFile(file, downloadCover, downloadTempCover), startPoint, progressCallback);
             }
         });
 

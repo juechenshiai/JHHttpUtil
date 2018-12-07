@@ -8,13 +8,38 @@ package com.jessehu.jhhttp.http.parameter;
  */
 public class DownloadParams {
 
+    /**
+     * 断点续传key
+     */
     private String startPointKey;
+    /**
+     * 断点续传起始点
+     */
     private long startPointValue;
+    /**
+     * 服务器断线续传返回的key
+     */
     private String responseStartPointKey;
+    /**
+     * 下载保存路径
+     */
     private String downloadPath;
+    /**
+     * 下载保存文件名
+     */
     private String downloadFilename;
+    /**
+     * 是否覆盖重名文件,默认不覆盖
+     */
     private boolean downloadCover = false;
+    /**
+     * 是否覆盖缓存文件，默认不覆盖
+     */
     private boolean downloadTempCover = false;
+    /**
+     * 是否处理下载,使用 {@link com.jessehu.jhhttp.http.callback.ProgressCallback}时默认下载
+     */
+    private boolean downloadAuto = true;
 
     public DownloadParams() {
     }
@@ -139,5 +164,13 @@ public class DownloadParams {
 
     public void setDownloadTempCover(boolean downloadTempCover) {
         this.downloadTempCover = downloadTempCover;
+    }
+
+    public boolean isDownloadAuto() {
+        return downloadAuto;
+    }
+
+    public void setDownloadAuto(boolean downloadAuto) {
+        this.downloadAuto = downloadAuto;
     }
 }

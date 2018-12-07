@@ -81,8 +81,8 @@ public class RequestParams {
     /**
      * 设置https证书
      *
-     * @param host
-     * @param cert
+     * @param host 域名
+     * @param cert 证书
      */
     public void setHttpsCert(String host, String cert) {
         sslSocketFactory = CertManager.getSocketFactory(cert);
@@ -270,6 +270,22 @@ public class RequestParams {
         downloadParams.setDownloadTempCover(downloadTempCover);
     }
 
+    /**
+     * 是否自动下载，仅在使用 {@link com.jessehu.jhhttp.http.callback.ProgressCallback}时有效<br/>
+     * 默认true<br/>
+     * 如果false需要自行处理下载,{@link DownloadParams#downloadCover}
+     * {@link DownloadParams#downloadTempCover}{@link DownloadParams#downloadPath}
+     * {@link DownloadParams#downloadFilename}都将不处理
+     *
+     * @param downloadAuto 是否处理下载 true:下载 false：不下载
+     */
+    public void setDownloadAuto(Boolean downloadAuto) {
+        if (downloadParams == null) {
+            downloadParams = new DownloadParams();
+        }
+        downloadParams.setDownloadAuto(downloadAuto);
+    }
+
     public Map<String, Object> getBodyParams() {
         return bodyParams;
     }
@@ -329,7 +345,7 @@ public class RequestParams {
      */
     public void addFile(String key, String filePath) {
         if (filePath == null) {
-            throw new RuntimeException("File is not exists");
+            throw new RuntimeException("File path is null");
         }
         File file = new File(filePath);
         addFile(key, file);

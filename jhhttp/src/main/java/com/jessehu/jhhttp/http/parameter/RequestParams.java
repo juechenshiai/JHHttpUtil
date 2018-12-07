@@ -328,6 +328,9 @@ public class RequestParams {
      * @param filePath 上传文件的路径
      */
     public void addFile(String key, String filePath) {
+        if (filePath == null) {
+            throw new RuntimeException("File is not exists");
+        }
         File file = new File(filePath);
         addFile(key, file);
     }

@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.jessehu.demo.MainActivity">
+    tools:context=".GetPostActivity">
 
     <Button
         android:id="@+id/btn_get"
@@ -14,8 +14,22 @@
         android:layout_marginTop="8dp"
         android:layout_marginEnd="4dp"
         android:text="@string/str_get"
-        app:layout_constraintEnd_toStartOf="@+id/btn_post"
+        android:textAllCaps="false"
+        app:layout_constraintEnd_toStartOf="@+id/btn_get_sync"
         app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/btn_get_sync"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="4dp"
+        android:text="@string/str_get_sync"
+        android:textAllCaps="false"
+        app:layout_constraintEnd_toStartOf="@+id/btn_post"
+        app:layout_constraintStart_toEndOf="@+id/btn_get"
         app:layout_constraintTop_toTopOf="parent" />
 
     <Button
@@ -26,36 +40,26 @@
         android:layout_marginTop="8dp"
         android:layout_marginEnd="4dp"
         android:text="@string/str_post"
-        app:layout_constraintEnd_toStartOf="@+id/btn_upload"
-        app:layout_constraintStart_toEndOf="@+id/btn_get"
+        android:textAllCaps="false"
+        app:layout_constraintEnd_toStartOf="@+id/btn_post_sync"
+        app:layout_constraintStart_toEndOf="@+id/btn_get_sync"
         app:layout_constraintTop_toTopOf="parent" />
 
     <Button
-        android:id="@+id/btn_upload"
+        android:id="@+id/btn_post_sync"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="4dp"
         android:layout_marginTop="8dp"
-        android:layout_marginEnd="4dp"
-        android:text="@string/str_upload"
-        app:layout_constraintEnd_toStartOf="@+id/btn_download"
+        android:layout_marginEnd="8dp"
+        android:text="@string/str_post_sync"
+        android:textAllCaps="false"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/btn_post"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <Button
-        android:id="@+id/btn_download"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="14dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginEnd="8dp"
-        android:text="@string/str_download"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/btn_upload"
-        app:layout_constraintTop_toTopOf="parent" />
-
     <TextView
-        android:id="@+id/tv_result"
+        android:id="@+id/tv_http_result"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginStart="8dp"
@@ -66,5 +70,4 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/btn_get" />
-
 </android.support.constraint.ConstraintLayout>

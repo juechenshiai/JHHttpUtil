@@ -1,7 +1,15 @@
 <resources>
     <string name="app_name">JHHttpUtil</string>
-    <string name="str_get">get</string>
-    <string name="str_post">post</string>
-    <string name="str_upload">upload</string>
-    <string name="str_download">download</string>
+    <string name="str_get">Get</string>
+    <string name="str_post">Post</string>
+    <string name="str_upload">Upload</string>
+    <string name="str_download">Download</string>
+    <string name="str_get_sync">GetSync</string>
+    <string name="str_post_sync">PostSync</string>
+    <string name="str_cover_file">覆盖重名文件</string>
+    <string name="str_cover_temp">覆盖缓存文件</string>
+    <string name="str_upload_pro">Upload Pro</string>
+    <string name="str_download_pro">Download Pro</string>
+    <string name="str_get_post">GET/POST</string>
+    <string name="str_download_auto">自动下载</string>
 </resources>

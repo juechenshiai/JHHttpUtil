@@ -65,7 +65,7 @@ public class ProgressResponseBody extends ResponseBody {
                 nf.setMaximumFractionDigits(2);
                 percent = Float.valueOf(nf.format(percent));
                 mCallback.onProgress(totalLength, this.allBytesRead + startPoint, percent);
-                if (totalLength == this.allBytesRead) {
+                if (totalLength == (this.allBytesRead + startPoint)) {
                     mCallback.onFinished();
                 }
                 return bytesRead;

@@ -235,9 +235,6 @@ public class HttpManagerImpl implements HttpManager {
 
             String absolutePath = tempFile.getAbsolutePath();
             tempFile.renameTo(new File(absolutePath.substring(0, absolutePath.length() - SUFFIX_TEMP.length())));
-
-            // 下载完成
-            progressCallback.onFinished();
         } catch (IOException e) {
             progressCallback.onFailure(call, e);
         } finally {
